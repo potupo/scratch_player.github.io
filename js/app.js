@@ -1,3 +1,4 @@
+
 (() => {
   'use strict';
 
@@ -354,9 +355,9 @@
 <section class="controls dpad state-neutral" aria-label="方向キー">
 <button class="control up" data-key="ArrowUp" aria-label="上"></button><button class="control left" data-key="ArrowLeft" aria-label="左"></button><button class="control right" data-key="ArrowRight" aria-label="右"></button><button class="control down" data-key="ArrowDown" aria-label="下"></button></section>
 <section class="game-area" aria-label="ゲーム画面"><div id="project" class="project"><div id="placeholder" class="placeholder"><div class="loader"></div><p id="loading-status">ゲームを準備しています…</p></div></div></section>
-<section class="action-area" aria-label="アクションボタン"><div class="controls action-buttons">
-<button class="control button-y" data-key="y" aria-label="Y">Y</button><button class="control button-x" data-key="x" aria-label="X">X</button><button class="control button-b" data-key="b" aria-label="B">B</button><button class="control button-a" data-key="a" aria-label="A">A</button></div>
-<div class="system-buttons"><button id="green-flag" class="system-button start-button" type="button">START</button><button id="stop-button" class="system-button stop-button" type="button">STOP</button></div></section></main>
+<section class="controls action-buttons" aria-label="アクションボタン">
+<button class="control button-y" data-key="y" aria-label="Y">Y</button><button class="control button-x" data-key="x" aria-label="X">X</button><button class="control button-b" data-key="b" aria-label="B">B</button><button class="control button-a" data-key="a" aria-label="A">A</button></section>
+<div class="system-buttons" aria-label="ゲーム操作"><button id="green-flag" class="system-button start-button" type="button">START</button><button id="stop-button" class="system-button stop-button" type="button">STOP</button></div></main>
 <script>
 (() => {
 'use strict';
@@ -584,17 +585,26 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   });
 
   document.getElementById('make-qr').addEventListener('click', () => {
-    const value = publishedUrlInput.value.trim();
     qrOutput.replaceChildren(); generatedQrCanvas = null; downloadQrButton.hidden = true;
+
+    if (!loadedProjectId) {
+      statusElement.textContent = 'Scratchゲームを読み込んでからQRコードを生成してください。';
+      return;
+    }
+
+    const value = publishedUrlInput.value.trim();
     let parsed;
-    try { parsed = new URL(value); } catch { statusElement.textContent = '公開URLを正しく入力してください。'; return; }
+    try { parsed = new URL(value); } catch { statusElement.textContent = 'プレイヤーの公開URLを正しく入力してください。'; return; }
     if (!['http:', 'https:'].includes(parsed.protocol)) { statusElement.textContent = 'HTTPまたはHTTPSのURLを入力してください。'; return; }
     if (!window.QRCode) { statusElement.textContent = 'QRコード機能を読み込めませんでした。ネット接続を確認してください。'; return; }
+
+    // 公開先プレイヤーのURLに、現在読み込んでいるScratch作品IDを付ける。
+    parsed.searchParams.set('project', loadedProjectId);
     new QRCode(qrOutput, { text: parsed.href, width: 220, height: 220, colorDark: '#111318', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
     window.setTimeout(() => {
       generatedQrCanvas = qrOutput.querySelector('canvas') || null;
       downloadQrButton.hidden = !generatedQrCanvas;
-      statusElement.textContent = generatedQrCanvas ? 'QRコードを生成しました。' : 'QRコードを生成できませんでした。';
+      statusElement.textContent = generatedQrCanvas ? `QRコードを生成しました（作品ID：${loadedProjectId}）。` : 'QRコードを生成できませんでした。';
     }, 100);
   });
 
@@ -867,5 +877,10 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   window.addEventListener('pagehide', releaseAllKeys);
 
   restoreWallpaper();
-  loadProject(DEFAULT_PROJECT_ID);
+  // QRコード経由で開かれた場合はURLのprojectパラメータを優先する。
+  const startupParams = new URLSearchParams(window.location.search);
+  const startupProjectId = startupParams.has('project')
+    ? startupParams.get('project')
+    : DEFAULT_PROJECT_ID;
+  loadProject(startupProjectId);
 })();
