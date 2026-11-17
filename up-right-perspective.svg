@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 116" width="512" height="512">
+<defs>
+ <linearGradient id="sideLit" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8995a3"/><stop offset="1" stop-color="#46515e"/></linearGradient>
+ <linearGradient id="sideMid" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#657180"/><stop offset="1" stop-color="#303945"/></linearGradient>
+ <linearGradient id="sideDark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#394451"/><stop offset="1" stop-color="#151b23"/></linearGradient>
+ <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#626d7b"/><stop offset=".28" stop-color="#4a5261"/><stop offset=".80" stop-color="#252b35"/><stop offset="1" stop-color="#171c24"/></linearGradient>
+ <radialGradient id="softLight" cx="38%" cy="62%" r="65%"><stop stop-color="#ffffff" stop-opacity=".19"/><stop offset=".42" stop-color="#ffffff" stop-opacity=".07"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<g>
+<path d="M 31,0 L 69,0 L 69,31 L 100,31 L 100,69 L 69,69 L 69,100 L 31,100 L 31,69 L 0,69 L 0,31 L 31,31 Z" fill="#111820" transform="translate(-0.75 -0.75) scale(1.015)"/>
+<g><polygon points="105.92,59.11 70.65,59.34 64,64 100,64" fill="url(#sideLit)"/><polygon points="70.5,91.99 40.51,92.67 36,100 64,100" fill="url(#sideLit)"/><polygon points="40.51,92.67 40.46,59.62 36,64 36,100" fill="url(#sideLit)"/><polygon points="40.46,59.62 6.87,59.84 0,64 36,64" fill="url(#sideLit)"/><polygon points="6.87,59.84 6.51,29.17 0,36 0,64" fill="url(#sideLit)"/><polygon points="40.39,29.06 40.34,-7.42 36,0 36,36" fill="url(#sideLit)"/></g>
+<path d="M 40.34,-7.42 L 71.03,-7.3 L 70.86,28.92 L 106.36,28.81 L 105.92,59.11 L 70.65,59.34 L 70.5,91.99 L 40.51,92.67 L 40.46,59.62 L 6.87,59.84 L 6.51,29.17 L 40.39,29.06 Z" fill="url(#face)" stroke="#141a22" stroke-width="1.0" stroke-linejoin="round"/>
+<path d="M 40.34,-7.42 L 71.03,-7.3 L 70.86,28.92 L 106.36,28.81 L 105.92,59.11 L 70.65,59.34 L 70.5,91.99 L 40.51,92.67 L 40.46,59.62 L 6.87,59.84 L 6.51,29.17 L 40.39,29.06 Z" fill="url(#softLight)"/>
+<path d="M 40.34,-7.42 L 71.03,-7.3 L 70.86,28.92 L 106.36,28.81 L 105.92,59.11 L 70.65,59.34 L 70.5,91.99 L 40.51,92.67 L 40.46,59.62 L 6.87,59.84 L 6.51,29.17 L 40.39,29.06 Z" fill="none" stroke="#ffffff" stroke-opacity=".13" stroke-width=".65" stroke-linejoin="round"/>
+</g></svg>

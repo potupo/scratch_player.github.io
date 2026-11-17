@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-8 -8 116 116" width="512" height="512">
+<defs>
+ <linearGradient id="sideLit" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8995a3"/><stop offset="1" stop-color="#46515e"/></linearGradient>
+ <linearGradient id="sideMid" x1="0" y1="0" x2="0.9" y2="1"><stop stop-color="#657180"/><stop offset="1" stop-color="#303945"/></linearGradient>
+ <linearGradient id="sideDark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#394451"/><stop offset="1" stop-color="#151b23"/></linearGradient>
+ <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#626d7b"/><stop offset=".28" stop-color="#4a5261"/><stop offset=".80" stop-color="#252b35"/><stop offset="1" stop-color="#171c24"/></linearGradient>
+ <radialGradient id="softLight" cx="66%" cy="50%" r="65%"><stop stop-color="#ffffff" stop-opacity=".19"/><stop offset=".42" stop-color="#ffffff" stop-opacity=".07"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
+</defs>
+<g>
+<path d="M 31,0 L 69,0 L 69,31 L 100,31 L 100,69 L 69,69 L 69,100 L 31,100 L 31,69 L 0,69 L 0,31 L 31,31 Z" fill="#111820" transform="translate(-0.75 -0.75) scale(1.015)"/>
+<g><polygon points="58.07,-0.16 58.07,35.94 64,36 64,0" fill="url(#sideLit)"/><polygon points="90.87,35.77 90.87,64.23 100,64 100,36" fill="url(#sideLit)"/><polygon points="58.07,64.06 58.07,100.16 64,100 64,64" fill="url(#sideLit)"/></g>
+<path d="M 27.15,0.39 L 58.07,-0.16 L 58.07,35.94 L 90.87,35.77 L 90.87,64.23 L 58.07,64.06 L 58.07,100.16 L 27.15,99.61 L 27.15,63.9 L -7.82,63.79 L -7.82,36.21 L 27.15,36.1 Z" fill="url(#face)" stroke="#141a22" stroke-width="1.0" stroke-linejoin="round"/>
+<path d="M 27.15,0.39 L 58.07,-0.16 L 58.07,35.94 L 90.87,35.77 L 90.87,64.23 L 58.07,64.06 L 58.07,100.16 L 27.15,99.61 L 27.15,63.9 L -7.82,63.79 L -7.82,36.21 L 27.15,36.1 Z" fill="url(#softLight)"/>
+<path d="M 27.15,0.39 L 58.07,-0.16 L 58.07,35.94 L 90.87,35.77 L 90.87,64.23 L 58.07,64.06 L 58.07,100.16 L 27.15,99.61 L 27.15,63.9 L -7.82,63.79 L -7.82,36.21 L 27.15,36.1 Z" fill="none" stroke="#ffffff" stroke-opacity=".13" stroke-width=".65" stroke-linejoin="round"/>
+</g></svg>

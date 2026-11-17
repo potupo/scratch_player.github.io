@@ -1,0 +1,790 @@
+:root {
+  color-scheme: dark;
+
+  /* =========================================================
+     DESIGN TOKENS
+     色・角丸・影・キーのサイズ感をまとめて調整する場所
+     ========================================================= */
+  --bg: #111318;
+  --shell-top: #48515f;
+  --shell-mid: #303846;
+  --shell-bottom: #202631;
+  --shell-edge: #111720;
+  --screen-frame: #111820;
+  --screen-edge: #596373;
+  --key-face: #343b49;
+  --key-active: #7185a8;
+  --dpad-light: #4a5261;
+  --dpad-dark: #252b35;
+  --key-gradient: linear-gradient(145deg, #3a404d, #292e38);
+  --key-shadow: #171a20;
+  --text-main: #f4f5f7;
+  --text-muted: #aab1bf;
+  --shell-radius: 28px;
+  --shell-shadow: 0 18px 48px #0008, inset 0 2px 1px #ffffff18, inset 0 -5px 12px #0005;
+  --padding01:24.5%;
+  --padding02:-22%;
+  --size: 50%;
+
+  /* 操作キーのサイズ調整：画面の向きごとに数値を変更できます。 */
+  --controls-size-landscape: min(15vw, 170px);
+  --controls-size-portrait: min(32vw, 160px);
+
+  /* START/STOPの上下位置：プラスで下、マイナスで上へ移動します。 */
+  --system-buttons-offset-y: 0px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  touch-action: manipulation;
+}
+
+body {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  background-color: var(--bg);
+  background-position: center;
+  background-size: cover;
+}
+
+/* =========================================================
+   PLAYER SKIN / WALLPAPER
+   背景ではなく、ゲームプレイヤー本体（player-layout）の外観を変更
+   ========================================================= */
+
+button, input, select { font: inherit; }
+button {
+  color: white;
+  border: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+button:disabled { opacity: .55; cursor: wait; }
+
+/* =========================================================
+   SETTINGS
+   右上の歯車と、開いたときの設定パネル
+   ========================================================= */
+.top-buttons {
+  position: fixed;
+  z-index: 30;
+  top: max(10px, env(safe-area-inset-top));
+  right: max(10px, env(safe-area-inset-right));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.menu-toggle {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid #ffffff24;
+  border-radius: 13px;
+  background: #171b24ef;
+  color: #f5f6fa;
+  box-shadow: 0 4px 16px #0006;
+  backdrop-filter: blur(10px);
+}
+.menu-toggle svg {
+  width: 23px;
+  height: 23px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.settings-toggle svg { width: 24px; height: 24px; }
+.menu-toggle:active { transform: scale(.95); }
+
+.settings-panel {
+  position: fixed;
+  z-index: 40;
+  top: max(60px, calc(env(safe-area-inset-top) + 52px));
+  right: max(10px, env(safe-area-inset-right));
+  width: min(360px, calc(100vw - 20px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid #454c5b;
+  border-radius: 15px;
+  background: #1b1f29f5;
+  box-shadow: 0 16px 48px #0009;
+  backdrop-filter: blur(18px);
+}
+.info-panel {
+  position: fixed;
+  z-index: 40;
+  top: max(60px, calc(env(safe-area-inset-top) + 52px));
+  right: max(10px, env(safe-area-inset-right));
+  width: min(360px, calc(100vw - 20px));
+  max-height: calc(100dvh - 80px);
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid #454c5b;
+  border-radius: 15px;
+  background: #1b1f29f5;
+  box-shadow: 0 16px 48px #0009;
+  backdrop-filter: blur(18px);
+}
+.settings-panel[hidden], .info-panel[hidden], [hidden] { display: none !important; }
+.info-controls-section {
+  display: grid;
+  gap: 7px;
+  padding: 13px 0;
+  border-top: 1px solid #ffffff16;
+  color: #b8c0ce;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.info-controls-section > strong { color: #dce2ed; font-size: 12px; }
+.info-controls-section p { margin: 0; }
+.info-controls-section b { color: #f0f2f7; }
+
+.settings-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 13px;
+  font-size: 15px;
+}
+.icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #343a48;
+  font-size: 22px;
+}
+.settings-section {
+  display: grid;
+  gap: 8px;
+  padding: 13px 0;
+  border-top: 1px solid #ffffff16;
+}
+.settings-section label {
+  color: #c9cfdb;
+  font-size: 12px;
+  font-weight: 700;
+}
+.settings-section input, .settings-section select {
+  width: 100%;
+  min-width: 0;
+  height: 39px;
+  border: 1px solid #414959;
+  border-radius: 8px;
+  padding: 0 10px;
+  background: #10141c;
+  color: white;
+  font-size: 13px;
+}
+.settings-section button {
+  min-height: 37px;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: #343b49;
+  font-size: 12px;
+  font-weight: 700;
+}
+.settings-section .primary-button { background: #536b94; }
+.settings-section .wide-button { width: 100%; }
+.rating-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 39px;
+  border: 1px solid #ffffff24;
+  border-radius: 8px;
+  padding: 7px 10px;
+  background: linear-gradient(135deg, #536b94, #394d70);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  text-decoration: none;
+}
+.rating-button:active { filter: brightness(1.12); }
+.rating-button span { color: #ffd1df; letter-spacing: .08em; }
+
+/* Scratch作品ページから取得した「使い方」「メモとクレジット」 */
+.project-info-section { gap: 10px; }
+.project-info-block {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #ffffff16;
+  border-radius: 9px;
+  background: #10141c99;
+}
+.project-info-block strong {
+  color: #dce2ed;
+  font-size: 11px;
+}
+.project-info-text {
+  margin: 0;
+  color: #b8c0ce;
+  font-size: 11px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.project-info-text.is-empty { color: #778195; font-style: italic; }
+.setting-hint {
+  margin: 0;
+  color: #8993a5;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.custom-wallpaper-row { display: flex; gap: 7px; }
+.custom-wallpaper-row input { flex: 1; }
+.custom-wallpaper-row button { flex: none; }
+.settings-status {
+  margin: 8px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid #ffffff16;
+  color: #9da8bb;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* =========================================================
+   SHARED CONSOLE PARTS
+   ゲーム画面・十字キー・ABXY・START/STOPの基本形状
+   ========================================================= */
+.player-layout {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  position: relative;
+  isolation: isolate;
+  align-items: center;
+  gap: clamp(10px, 1.8vw, 22px);
+  padding: 14px clamp(12px, 2vw, 24px);
+}
+.game-area {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.project {
+  position: relative;
+  width: 100%;
+  max-height: 100%;
+  aspect-ratio: 4 / 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  background: #050608;
+  border: 1px solid #343945;
+}
+.project > * { max-width: 100%; max-height: 100%; }
+.placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px;
+}
+.loader {
+  width: 24px;
+  height: 24px;
+  border: 3px solid #424958;
+  border-top-color: #a9b7d3;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.controls {
+  position: relative;
+  width: var(--controls-size-landscape);
+  aspect-ratio: 1;
+  justify-self: center;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.control {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 13px;
+  background: var(--key-gradient);
+  box-shadow: 0 4px 0 var(--key-shadow), inset 0 1px 0 #ffffff38;
+  font-size: clamp(17px, 3vw, 27px);
+  font-weight: 800;
+  touch-action: none;
+}
+.control.pressed {
+  transform: translateY(3px);
+  background: var(--key-active);
+  box-shadow: 0 1px 0 var(--key-shadow), inset 0 1px 0 #ffffff66;
+}
+/* 十字キー：9状態の完成SVG素材を切り替える。描画時のポリゴン計算は行わない */
+.dpad {
+  isolation: isolate;
+  overflow: visible;
+  --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-5%20-5%20110%20110%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2250%25%22%20cy=%2250%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3C/g%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E");
+}
+.dpad::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: -30%;
+  pointer-events: none;
+  background-image: var(--dpad-image);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+.dpad::after { content: none; }
+.dpad.state-neutral { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2250%25%22%20cy=%2250%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3C/g%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2036,0%20L%2064,0%20L%2064,36%20L%20100,36%20L%20100,64%20L%2064,64%20L%2064,100%20L%2036,100%20L%2036,64%20L%200,64%20L%200,36%20L%2036,36%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-up { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2250%25%22%20cy=%2266%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2299.84,58.02%2063.96,58.02%2064,64%20100,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2263.85,89.84%2036.15,89.84%2036,100%2064,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2236.04,58.02%200.16,58.02%200,64%2036,64%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2035.67,-9.79%20L%2064.33,-9.79%20L%2064.15,26.73%20L%20100.41,26.73%20L%2099.84,58.02%20L%2063.96,58.02%20L%2063.85,89.84%20L%2036.15,89.84%20L%2036.04,58.02%20L%200.16,58.02%20L%20-0.41,26.73%20L%2035.85,26.73%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2035.67,-9.79%20L%2064.33,-9.79%20L%2064.15,26.73%20L%20100.41,26.73%20L%2099.84,58.02%20L%2063.96,58.02%20L%2063.85,89.84%20L%2036.15,89.84%20L%2036.04,58.02%20L%200.16,58.02%20L%20-0.41,26.73%20L%2035.85,26.73%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2035.67,-9.79%20L%2064.33,-9.79%20L%2064.15,26.73%20L%20100.41,26.73%20L%2099.84,58.02%20L%2063.96,58.02%20L%2063.85,89.84%20L%2036.15,89.84%20L%2036.04,58.02%20L%200.16,58.02%20L%20-0.41,26.73%20L%2035.85,26.73%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-down { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2250%25%22%20cy=%2234%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2236.15,10.16%2063.85,10.16%2064,0%2036,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2263.96,41.98%2099.84,41.98%20100,36%2064,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%220.16,41.98%2036.04,41.98%2036,36%200,36%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2036.15,10.16%20L%2063.85,10.16%20L%2063.96,41.98%20L%2099.84,41.98%20L%20100.41,73.27%20L%2064.15,73.27%20L%2064.33,109.79%20L%2035.67,109.79%20L%2035.85,73.27%20L%20-0.41,73.27%20L%200.16,41.98%20L%2036.04,41.98%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2036.15,10.16%20L%2063.85,10.16%20L%2063.96,41.98%20L%2099.84,41.98%20L%20100.41,73.27%20L%2064.15,73.27%20L%2064.33,109.79%20L%2035.67,109.79%20L%2035.85,73.27%20L%20-0.41,73.27%20L%200.16,41.98%20L%2036.04,41.98%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2036.15,10.16%20L%2063.85,10.16%20L%2063.96,41.98%20L%2099.84,41.98%20L%20100.41,73.27%20L%2064.15,73.27%20L%2064.33,109.79%20L%2035.67,109.79%20L%2035.85,73.27%20L%20-0.41,73.27%20L%200.16,41.98%20L%2036.04,41.98%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-left { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2266%25%22%20cy=%2250%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2258.07,-0.16%2058.07,35.94%2064,36%2064,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2290.87,35.77%2090.87,64.23%20100,64%20100,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2258.07,64.06%2058.07,100.16%2064,100%2064,64%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2027.15,0.39%20L%2058.07,-0.16%20L%2058.07,35.94%20L%2090.87,35.77%20L%2090.87,64.23%20L%2058.07,64.06%20L%2058.07,100.16%20L%2027.15,99.61%20L%2027.15,63.9%20L%20-7.82,63.79%20L%20-7.82,36.21%20L%2027.15,36.1%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2027.15,0.39%20L%2058.07,-0.16%20L%2058.07,35.94%20L%2090.87,35.77%20L%2090.87,64.23%20L%2058.07,64.06%20L%2058.07,100.16%20L%2027.15,99.61%20L%2027.15,63.9%20L%20-7.82,63.79%20L%20-7.82,36.21%20L%2027.15,36.1%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2027.15,0.39%20L%2058.07,-0.16%20L%2058.07,35.94%20L%2090.87,35.77%20L%2090.87,64.23%20L%2058.07,64.06%20L%2058.07,100.16%20L%2027.15,99.61%20L%2027.15,63.9%20L%20-7.82,63.79%20L%20-7.82,36.21%20L%2027.15,36.1%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-right { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2234%25%22%20cy=%2250%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2241.93,100.16%2041.93,64.06%2036,64%2036,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%229.13,64.23%209.13,35.77%200,36%200,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2241.93,35.94%2041.93,-0.16%2036,0%2036,36%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2041.93,-0.16%20L%2072.85,0.39%20L%2072.85,36.1%20L%20107.82,36.21%20L%20107.82,63.79%20L%2072.85,63.9%20L%2072.85,99.61%20L%2041.93,100.16%20L%2041.93,64.06%20L%209.13,64.23%20L%209.13,35.77%20L%2041.93,35.94%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2041.93,-0.16%20L%2072.85,0.39%20L%2072.85,36.1%20L%20107.82,36.21%20L%20107.82,63.79%20L%2072.85,63.9%20L%2072.85,99.61%20L%2041.93,100.16%20L%2041.93,64.06%20L%209.13,64.23%20L%209.13,35.77%20L%2041.93,35.94%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2041.93,-0.16%20L%2072.85,0.39%20L%2072.85,36.1%20L%20107.82,36.21%20L%20107.82,63.79%20L%2072.85,63.9%20L%2072.85,99.61%20L%2041.93,100.16%20L%2041.93,64.06%20L%209.13,64.23%20L%209.13,35.77%20L%2041.93,35.94%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-up-left { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2262%25%22%20cy=%2262%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2259.66,-7.42%2059.61,29.06%2064,36%2064,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2293.49,29.17%2093.13,59.84%20100,64%20100,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2293.13,59.84%2059.54,59.62%2064,64%20100,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2259.54,59.62%2059.49,92.67%2064,100%2064,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2259.49,92.67%2029.5,91.99%2036,100%2064,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2229.35,59.34%20-5.92,59.11%200,64%2036,64%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2028.97,-7.3%20L%2059.66,-7.42%20L%2059.61,29.06%20L%2093.49,29.17%20L%2093.13,59.84%20L%2059.54,59.62%20L%2059.49,92.67%20L%2029.5,91.99%20L%2029.35,59.34%20L%20-5.92,59.11%20L%20-6.36,28.81%20L%2029.14,28.92%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2028.97,-7.3%20L%2059.66,-7.42%20L%2059.61,29.06%20L%2093.49,29.17%20L%2093.13,59.84%20L%2059.54,59.62%20L%2059.49,92.67%20L%2029.5,91.99%20L%2029.35,59.34%20L%20-5.92,59.11%20L%20-6.36,28.81%20L%2029.14,28.92%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2028.97,-7.3%20L%2059.66,-7.42%20L%2059.61,29.06%20L%2093.49,29.17%20L%2093.13,59.84%20L%2059.54,59.62%20L%2059.49,92.67%20L%2029.5,91.99%20L%2029.35,59.34%20L%20-5.92,59.11%20L%20-6.36,28.81%20L%2029.14,28.92%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-up-right { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2238%25%22%20cy=%2262%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%22105.92,59.11%2070.65,59.34%2064,64%20100,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2270.5,91.99%2040.51,92.67%2036,100%2064,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2240.51,92.67%2040.46,59.62%2036,64%2036,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2240.46,59.62%206.87,59.84%200,64%2036,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%226.87,59.84%206.51,29.17%200,36%200,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2240.39,29.06%2040.34,-7.42%2036,0%2036,36%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2040.34,-7.42%20L%2071.03,-7.3%20L%2070.86,28.92%20L%20106.36,28.81%20L%20105.92,59.11%20L%2070.65,59.34%20L%2070.5,91.99%20L%2040.51,92.67%20L%2040.46,59.62%20L%206.87,59.84%20L%206.51,29.17%20L%2040.39,29.06%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2040.34,-7.42%20L%2071.03,-7.3%20L%2070.86,28.92%20L%20106.36,28.81%20L%20105.92,59.11%20L%2070.65,59.34%20L%2070.5,91.99%20L%2040.51,92.67%20L%2040.46,59.62%20L%206.87,59.84%20L%206.51,29.17%20L%2040.39,29.06%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2040.34,-7.42%20L%2071.03,-7.3%20L%2070.86,28.92%20L%20106.36,28.81%20L%20105.92,59.11%20L%2070.65,59.34%20L%2070.5,91.99%20L%2040.51,92.67%20L%2040.46,59.62%20L%206.87,59.84%20L%206.51,29.17%20L%2040.39,29.06%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-down-left { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2262%25%22%20cy=%2238%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2229.5,8.01%2059.49,7.33%2064,0%2036,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2259.49,7.33%2059.54,40.38%2064,36%2064,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2259.54,40.38%2093.13,40.16%20100,36%2064,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2293.13,40.16%2093.49,70.83%20100,64%20100,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2259.61,70.94%2059.66,107.42%2064,100%2064,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%22-5.92,40.89%2029.35,40.66%2036,36%200,36%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2029.5,8.01%20L%2059.49,7.33%20L%2059.54,40.38%20L%2093.13,40.16%20L%2093.49,70.83%20L%2059.61,70.94%20L%2059.66,107.42%20L%2028.97,107.3%20L%2029.14,71.08%20L%20-6.36,71.19%20L%20-5.92,40.89%20L%2029.35,40.66%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2029.5,8.01%20L%2059.49,7.33%20L%2059.54,40.38%20L%2093.13,40.16%20L%2093.49,70.83%20L%2059.61,70.94%20L%2059.66,107.42%20L%2028.97,107.3%20L%2029.14,71.08%20L%20-6.36,71.19%20L%20-5.92,40.89%20L%2029.35,40.66%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2029.5,8.01%20L%2059.49,7.33%20L%2059.54,40.38%20L%2093.13,40.16%20L%2093.49,70.83%20L%2059.61,70.94%20L%2059.66,107.42%20L%2028.97,107.3%20L%2029.14,71.08%20L%20-6.36,71.19%20L%20-5.92,40.89%20L%2029.35,40.66%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+.dpad.state-down-right { --dpad-image: url("data:image/svg+xml,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20viewBox=%22-8%20-8%20116%20116%22%20width=%22512%22%20height=%22512%22%3E%0A%3Cdefs%3E%0A%20%3ClinearGradient%20id=%22sideLit%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%238995a3%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%2346515e%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideMid%22%20x1=%220%22%20y1=%220%22%20x2=%220.9%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23657180%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23303945%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22sideDark%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23394451%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23151b23%22/%3E%3C/linearGradient%3E%0A%20%3ClinearGradient%20id=%22face%22%20x1=%220%22%20y1=%220%22%20x2=%221%22%20y2=%221%22%3E%3Cstop%20stop-color=%22%23626d7b%22/%3E%3Cstop%20offset=%22.28%22%20stop-color=%22%234a5261%22/%3E%3Cstop%20offset=%22.80%22%20stop-color=%22%23252b35%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23171c24%22/%3E%3C/linearGradient%3E%0A%20%3CradialGradient%20id=%22softLight%22%20cx=%2238%25%22%20cy=%2238%25%22%20r=%2265%25%22%3E%3Cstop%20stop-color=%22%23ffffff%22%20stop-opacity=%22.19%22/%3E%3Cstop%20offset=%22.42%22%20stop-color=%22%23ffffff%22%20stop-opacity=%22.07%22/%3E%3Cstop%20offset=%221%22%20stop-color=%22%23ffffff%22%20stop-opacity=%220%22/%3E%3C/radialGradient%3E%0A%3C/defs%3E%3Cg%3E%0A%3Cpath%20d=%22M%2031,0%20L%2069,0%20L%2069,31%20L%20100,31%20L%20100,69%20L%2069,69%20L%2069,100%20L%2031,100%20L%2031,69%20L%200,69%20L%200,31%20L%2031,31%20Z%22%20fill=%22%23111820%22%20transform=%22translate(-0.75%20-0.75)%20scale(1.015)%22/%3E%0A%0A%3Cg%3E%3Cpolygon%20points=%2240.51,7.33%2070.5,8.01%2064,0%2036,0%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2270.65,40.66%20105.92,40.89%20100,36%2064,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2240.34,107.42%2040.39,70.94%2036,64%2036,100%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%226.51,70.83%206.87,40.16%200,36%200,64%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%226.87,40.16%2040.46,40.38%2036,36%200,36%22%20fill=%22url(%23sideLit)%22/%3E%3Cpolygon%20points=%2240.46,40.38%2040.51,7.33%2036,0%2036,36%22%20fill=%22url(%23sideLit)%22/%3E%3C/g%3E%0A%3Cpath%20d=%22M%2040.51,7.33%20L%2070.5,8.01%20L%2070.65,40.66%20L%20105.92,40.89%20L%20106.36,71.19%20L%2070.86,71.08%20L%2071.03,107.3%20L%2040.34,107.42%20L%2040.39,70.94%20L%206.51,70.83%20L%206.87,40.16%20L%2040.46,40.38%20Z%22%20fill=%22url(%23face)%22%20stroke=%22%23141a22%22%20stroke-width=%221.0%22%20stroke-linejoin=%22round%22/%3E%0A%3Cpath%20d=%22M%2040.51,7.33%20L%2070.5,8.01%20L%2070.65,40.66%20L%20105.92,40.89%20L%20106.36,71.19%20L%2070.86,71.08%20L%2071.03,107.3%20L%2040.34,107.42%20L%2040.39,70.94%20L%206.51,70.83%20L%206.87,40.16%20L%2040.46,40.38%20Z%22%20fill=%22url(%23softLight)%22/%3E%0A%3Cpath%20d=%22M%2040.51,7.33%20L%2070.5,8.01%20L%2070.65,40.66%20L%20105.92,40.89%20L%20106.36,71.19%20L%2070.86,71.08%20L%2071.03,107.3%20L%2040.34,107.42%20L%2040.39,70.94%20L%206.51,70.83%20L%206.87,40.16%20L%2040.46,40.38%20Z%22%20fill=%22none%22%20stroke=%22%23ffffff%22%20stroke-opacity=%22.13%22%20stroke-width=%22.65%22%20stroke-linejoin=%22round%22/%3E%0A%3C/g%3E%3C/svg%3E"); }
+
+/* 開発者向けの「変形なし」比較モードも素材で切り替える */
+.dpad .control {
+  z-index: 3;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: transparent;
+  box-shadow: none;
+  clip-path: none;
+  transition: none;
+  pointer-events: auto;
+  touch-action: none;
+}
+.dpad .up { top: 3%; left: 31%; width: 38%; height: 35%; }
+.dpad .down { bottom: 3%; left: 31%; width: 38%; height: 35%; }
+.dpad .left { left: 3%; top: 31%; width: 35%; height: 38%; }
+.dpad .right { right: 3%; top: 31%; width: 35%; height: 38%; }
+.dpad .control.pressed {
+  background: transparent;
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+/* 押し込んだ側は側面を薄く、反対側は側面を広く見せる。ハイライトも反対側から当てる */
+.dpad.tilt-up, .dpad.tilt-down, .dpad.tilt-left, .dpad.tilt-right { --dpad-base-y: 0px; }
+.dpad.tilt-up { --dpad-face-y: -8px; --dpad-rotate-x: -7deg; --dpad-light-x: 50%; --dpad-light-y: 100%; --dpad-side-angle: 180deg; }
+.dpad.tilt-down { --dpad-face-y: 8px; --dpad-rotate-x: 7deg; --dpad-light-x: 50%; --dpad-light-y: 0%; --dpad-side-angle: 0deg; }
+.dpad.tilt-left { --dpad-face-x: -8px; --dpad-rotate-y: -7deg; --dpad-light-x: 100%; --dpad-light-y: 50%; --dpad-side-angle: 270deg; }
+.dpad.tilt-right { --dpad-face-x: 8px; --dpad-rotate-y: 7deg; --dpad-light-x: 0%; --dpad-light-y: 50%; --dpad-side-angle: 90deg; }
+.dpad.tilt-up.tilt-left { --dpad-face-x: -6px; --dpad-face-y: -6px; --dpad-rotate-x: -5deg; --dpad-rotate-y: -5deg; --dpad-light-x: 100%; --dpad-light-y: 100%; --dpad-side-angle: 225deg; }
+.dpad.tilt-up.tilt-right { --dpad-face-x: 6px; --dpad-face-y: -6px; --dpad-rotate-x: -5deg; --dpad-rotate-y: 5deg; --dpad-light-x: 0%; --dpad-light-y: 100%; --dpad-side-angle: 135deg; }
+.dpad.tilt-down.tilt-left { --dpad-face-x: -6px; --dpad-face-y: 6px; --dpad-rotate-x: 5deg; --dpad-rotate-y: -5deg; --dpad-light-x: 100%; --dpad-light-y: 0%; --dpad-side-angle: 315deg; }
+.dpad.tilt-down.tilt-right { --dpad-face-x: 6px; --dpad-face-y: 6px; --dpad-rotate-x: 5deg; --dpad-rotate-y: 5deg; --dpad-light-x: 0%; --dpad-light-y: 0%; --dpad-side-angle: 45deg; }
+
+.action-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.5vh, 16px);
+}
+.action-buttons { width: min(100%, 210px); }
+.action-buttons .control {
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  border: 2px solid #ffffff20;
+}
+.action-buttons .control.pressed {
+  transform: translateY(3px) scale(.97);
+  box-shadow: 0 1px 0 var(--key-shadow), inset 0 2px 4px #0005, inset 0 1px 0 #ffffff55;
+  filter: brightness(1.08);
+}
+
+.button-y {
+  top: var(--padding02);
+  left: var(--padding01);
+}
+.button-x {
+  top: var(--padding01);
+  left: var(--padding02);
+}
+.button-b {
+  bottom: var(--padding02);
+  left: var(--padding01);
+}
+.button-a {
+  top: var(--padding01);
+  right: var(--padding02);
+}
+
+/* START / STOPの大きさ・間隔・色を調整する場所 */
+.system-buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  align-self: center;
+  width: 100%;
+  justify-content: center;
+  margin-bottom: 0;
+  /* 上下位置は :root の --system-buttons-offset-y で調整 */
+  transform: translateY(var(--system-buttons-offset-y));
+}
+.system-button {
+  min-width: 76px;
+  min-height: 30px;
+  padding: 6px 13px;
+  border: 1px solid #ffffff24;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #515b6b, #252c37);
+  color: #e9edf4;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+  box-shadow: 0 3px 0 #10151d, inset 0 1px 0 #ffffff20;
+}
+.system-button:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 #10151d;
+}
+/* .start-button { color: #b9e5b7; }
+.stop-button { color: #f1b2b2; } */
+
+/* =========================================================
+   CONSOLE COLOR PRESETS
+   本体カラー・ボタン・画面フレームをまとめて着せ替える
+   ========================================================= */
+.player-layout::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.player-layout > * { position: relative; z-index: 1; }
+
+/* 初代ゲームボーイをイメージしたグレー */
+body[data-wallpaper="classic"] .player-layout {
+  --shell-top: #c4c0b7;
+  --shell-mid: #aaa69e;
+  --shell-bottom: #77766f;
+  --screen-frame: #343a35;
+  --screen-edge: #d0cbbf;
+  --key-gradient: linear-gradient(145deg, #555b60, #252a30);
+  --key-shadow: #34302f;
+  --dpad-light: #555b60;
+  --dpad-dark: #252a30;
+  --dpad-stroke: #1d2227;
+  --key-active: #8995a0;
+  --preset-skin-image: linear-gradient(145deg, #d2cec5, #aaa69e 58%, #85847d);
+}
+
+/* ゲームボーイポケット風の明るいホワイト */
+body[data-wallpaper="white"] .player-layout {
+  --shell-top: #ffffff;
+  --shell-mid: #e9edf0;
+  --shell-bottom: #c5cbd1;
+  --screen-frame: #69727a;
+  --screen-edge: #ffffff;
+  --key-gradient: linear-gradient(145deg, #68727c, #343d47);
+  --key-shadow: #858d95;
+  --dpad-light: #737d87;
+  --dpad-dark: #3c454e;
+  --dpad-stroke: #303943;
+  --key-active: #aab8c5;
+  --preset-skin-image: linear-gradient(145deg, #ffffff, #e7ebef 58%, #cbd1d7);
+}
+body[data-wallpaper="white"] .button-y { background: linear-gradient(145deg, #e8c96f, #b18a36); }
+body[data-wallpaper="white"] .button-x { background: linear-gradient(145deg, #8bb8e5, #527eae); }
+body[data-wallpaper="white"] .button-b { background: linear-gradient(145deg, #ed9292, #b84f59); }
+body[data-wallpaper="white"] .button-a { background: linear-gradient(145deg, #91d29b, #4e9a61); }
+
+/* レトロなレッド筐体 */
+body[data-wallpaper="red"] .player-layout {
+  --shell-top: #f05a58;
+  --shell-mid: #bd3039;
+  --shell-bottom: #761d2b;
+  --screen-frame: #4b2027;
+  --screen-edge: #f18a7e;
+  --key-gradient: linear-gradient(145deg, #3e4149, #171a21);
+  --key-shadow: #501b24;
+  --dpad-light: #4a4d56;
+  --dpad-dark: #20232a;
+  --dpad-stroke: #17191f;
+  --key-active: #b85a65;
+  --preset-skin-image: linear-gradient(145deg, #f56a61, #c3333d 56%, #852331);
+}
+body[data-wallpaper="red"] .button-y { background: linear-gradient(145deg, #f4d16a, #bd8b2f); }
+body[data-wallpaper="red"] .button-x { background: linear-gradient(145deg, #8bc1ef, #3c70a8); }
+body[data-wallpaper="red"] .button-b { background: linear-gradient(145deg, #f2a0a0, #b8424d); }
+body[data-wallpaper="red"] .button-a { background: linear-gradient(145deg, #9bd69c, #448d52); }
+
+/* クリアパープル：透明スケルトン筐体。配線・IC・ネジ・樹脂反射を重ねる */
+body[data-wallpaper="clear-purple"] .player-layout {
+  --shell-top: #d7b2f0;
+  --shell-mid: #8752b6;
+  --shell-bottom: #49266e;
+  --screen-frame: #39204f;
+  --screen-edge: #e7c9ff;
+  --key-gradient: linear-gradient(145deg, #80619b, #3a2450);
+  --key-shadow: #28143a;
+  --dpad-light: #9273aa;
+  --dpad-dark: #43275c;
+  --dpad-stroke: #2b173e;
+  --key-active: #c59be2;
+  /* 下地は不透明なベタ塗りにせず、紫色の透明樹脂を重ねた表現 */
+  --preset-skin-image:
+    linear-gradient(132deg, #f5dcff9c 0%, #c18be45c 18%, #6e3e9c9c 58%, #3d205fbd 100%),
+    radial-gradient(ellipse at 15% 8%, #ffffffa6 0%, #f2d8ff40 19%, transparent 42%),
+    linear-gradient(145deg, #bd8cdd, #71419b 54%, #432565);
+  background-color: #704292;
+  border: 2px solid #e9caffb8;
+  box-shadow:
+    0 18px 48px #0009,
+    inset 0 2px 2px #ffffff9c,
+    inset 0 -8px 18px #2a124c88,
+    inset 0 0 0 4px #5c347d88;
+  backdrop-filter: saturate(1.45) contrast(1.04);
+}
+
+/* 基板の配線パターンとパッド。筐体の下に透けて見えるレイヤー */
+body[data-wallpaper="clear-purple"] .player-layout::before {
+  opacity: 1;
+  background-image:
+    /* 配線の直角パターン */
+    linear-gradient(90deg, transparent 0 9%, #f2d5ffb0 9.2% 9.7%, transparent 9.9% 100%),
+    linear-gradient(0deg, transparent 0 18%, #3d1d62b8 18.2% 18.7%, transparent 18.9% 100%),
+    linear-gradient(90deg, transparent 0 77%, #f4d9ff99 77.2% 77.7%, transparent 77.9% 100%),
+    linear-gradient(0deg, transparent 0 78%, #4b2871b8 78.2% 78.7%, transparent 78.9% 100%),
+    /* IC周辺へ伸びる細い配線 */
+    repeating-linear-gradient(32deg, transparent 0 27px, #f5dfff65 28px 29px, transparent 30px 48px),
+    repeating-linear-gradient(148deg, transparent 0 39px, #32134f70 40px 41px, transparent 42px 66px),
+    /* はんだパッド */
+    radial-gradient(circle at 9.5% 18.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 77.5% 18.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 77.5% 78.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
+    radial-gradient(circle at 9.5% 78.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
+    /* 基板の濃淡 */
+    radial-gradient(ellipse at 78% 26%, #371b5a88 0 17%, transparent 18%),
+    radial-gradient(ellipse at 18% 74%, #32165077 0 15%, transparent 16%);
+  background-size: 100% 100%;
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* 4隅の固定ネジ、ICチップ、透明樹脂のハイライト */
+body[data-wallpaper="clear-purple"] .player-layout::after {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    /* ネジ頭 */
+    radial-gradient(circle at 18px 18px, #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
+    radial-gradient(circle at calc(100% - 18px) 18px, #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
+    radial-gradient(circle at 18px calc(100% - 18px), #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
+    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
+    /* 小型ICチップと端子 */
+    linear-gradient(#28143b 0 0) 82% 38% / 34px 25px no-repeat,
+    repeating-linear-gradient(90deg, #f6dfff 0 2px, transparent 2px 5px) 82% 35% / 38px 3px no-repeat,
+    repeating-linear-gradient(90deg, #f6dfff 0 2px, transparent 2px 5px) 82% 63% / 38px 3px no-repeat,
+    /* 樹脂表面の反射 */
+    linear-gradient(112deg, #ffffff55 0%, transparent 18% 72%, #ffffff20 100%);
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 0 1px #f5ddff75;
+}
+body[data-wallpaper="clear-purple"] .button-y { background: linear-gradient(145deg, #e8c5ff, #9765c0); color: #29163b; }
+body[data-wallpaper="clear-purple"] .button-x { background: linear-gradient(145deg, #b8a4ed, #6851a0); }
+body[data-wallpaper="clear-purple"] .button-b { background: linear-gradient(145deg, #ef9acb, #a94f91); }
+body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145deg, #a5d9c5, #4d9b82); }
+
+/* =========================================================
+   LANDSCAPE: GAME BOY ADVANCE INSPIRED
+   横画面の左右コントローラーと中央画面の配置
+   ========================================================= */
+@media (orientation: landscape) {
+  .player-layout {
+    /* 左右の操作エリアを初期版に近い幅へ戻し、中央のゲーム画面を拡大 */
+    grid-template-columns: minmax(100px, 19vw) minmax(0, 1fr) minmax(100px, 19vw);
+    grid-template-rows: minmax(0, 1fr);
+    max-width: 1500px;
+    margin: auto;
+    width: 100%;
+    padding: 12px clamp(14px, 2.6vw, 38px);
+  }
+  .dpad { grid-column: 1; grid-row: 1; width: min(100%, var(--controls-size-landscape)); }
+  .game-area { grid-column: 2; grid-row: 1; }
+  .project {
+    /* 横画面は中央カラムの幅いっぱいまでゲーム画面を使う */
+    width: 100%;
+    max-height: calc(100dvh - 28px);
+    border: 7px solid var(--screen-frame);
+    border-radius: 12px;
+    /* box-shadow: 0 0 0 2px var(--screen-edge), 0 10px 24px #0008; */
+  }
+  .action-area {
+    grid-column: 3;
+    grid-row: 1;
+    gap: 90px;
+    width: 100%;
+  }
+  .action-buttons { width: min(100%, var(--controls-size-landscape)); }
+  .system-buttons { gap: 8px; }
+  .system-button { min-width: 68px; min-height: 28px; }
+  .player-layout {
+    background-color: var(--shell-mid);
+    background-image: var(--player-skin-image, var(--preset-skin-image, linear-gradient(155deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #ffffff22;
+    border-radius: var(--shell-radius);
+    box-shadow: var(--shell-shadow);
+    margin: 12px auto;
+    height: calc(100% - 24px);
+    max-height: 900px;
+  }
+}
+
+/* =========================================================
+   PORTRAIT: GAME BOY INSPIRED
+   上に画面、下に左右のキーと、そのさらに下にSTART/STOP
+   ========================================================= */
+@media (orientation: portrait) {
+  .player-layout {
+    width: min(100%, 560px);
+    height: 100%;
+    margin: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    column-gap: clamp(8px, 3vw, 20px);
+    row-gap: 0;
+    padding: max(52px, calc(env(safe-area-inset-top) + 48px)) 18px max(16px, env(safe-area-inset-bottom));
+    background-color: var(--shell-mid);
+    background-image: var(--player-skin-image, var(--preset-skin-image, linear-gradient(145deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #ffffff20;
+    border-radius: 0;
+    /* box-shadow: inset 0 0 35px #0005; */
+  }
+  .game-area {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    width: 100%;
+    min-height: 0;
+    padding: 8px 0 12px;
+  }
+  .project {
+    /* 縦画面の操作部に必要な高さを見直し、ゲーム画面を大きく確保 */
+    width: min(100%, calc((100dvh - 240px) * 1.333));
+    max-height: 100%;
+    border: 5vw solid var(--screen-frame);
+    border-radius: 13px;
+    /* box-shadow: 0 0 0 2px var(--screen-edge), 0 8px 18px #0007; */
+  }
+  .dpad {
+    grid-column: 1;
+    grid-row: 2;
+    width: var(--controls-size-portrait);
+    margin: 4px auto 8px;
+  }
+  /* display: contents にして、ABXYとSTART/STOPを親グリッド上に配置する */
+  .action-area { display: contents; }
+  .action-buttons {
+    grid-column: 2;
+    grid-row: 2;
+    width: var(--controls-size-portrait);
+    margin: 4px auto 8px;
+  }
+  .system-buttons {
+    /* ABXYキーと同じ右カラムに置き、ABXYキー群の横中心に揃える */
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: center;
+    padding-top: 5px;
+    gap: 12px;
+  }
+  .system-button {
+    min-width: 82px;
+    min-height: 31px;
+    font-size: 10px;
+  }
+  body[data-wallpaper="classic"] .control { color: #e4e7e9; }
+}
+
+/* 画面の高さが小さい端末で、操作部が押し出されないように縮める */
+@media (max-height: 520px) and (orientation: landscape) {
+  .player-layout { padding-top: 5px; padding-bottom: 5px; margin-top: 5px; margin-bottom: 5px; height: calc(100% - 10px); }
+  :root { --controls-size-landscape: min(22vh, 145px); }
+  .system-button { min-width: 60px; min-height: 25px; }
+  .menu-toggle { width: 36px; height: 36px; }
+}
+@media (max-height: 700px) and (orientation: portrait) {
+  .player-layout { padding-top: max(48px, calc(env(safe-area-inset-top) + 44px)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+  .project { width: min(100%, calc((100dvh - 220px) * 1.333)); }
+  :root { --controls-size-portrait: min(30vw, 145px); }
+}
+
+
+/* =========================================================
+   DEVELOPER MODE
+   SB3登録・HTML生成・公開URLのQRコード表示
+   ========================================================= */
+.developer-section > summary {
+  color: #dce5f5;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style-position: inside;
+}
+.developer-section[open] > summary { margin-bottom: 8px; }
+.developer-section textarea {
+  width: 100%; min-height: 58px; resize: vertical;
+  border: 1px solid #414959; border-radius: 8px; padding: 9px 10px;
+  background: #10141c; color: white; font: inherit; font-size: 12px;
+}
+.developer-section input[type="file"] { height: auto; padding: 8px; font-size: 11px; }
+.developer-divider { height: 1px; margin: 5px 0; background: #ffffff20; }
+.qr-output { display: grid; place-items: center; min-height: 0; padding: 8px; background: #ffffff; border-radius: 8px; }
+.qr-output:empty { display: none; }
+.qr-output img, .qr-output canvas { display: block; max-width: 100%; height: auto; }
+
+.sc-layers{
+  width: 100% !important;
+  height: 100% !important;
+}
