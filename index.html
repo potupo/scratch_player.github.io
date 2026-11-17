@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#111318">
+  <title>Scratch Game Player</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@turbowarp/packager@3.14.0/dist/scaffolding/scaffolding-min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body data-wallpaper="classic">
+  <div class="top-buttons" aria-label="プレイヤーメニュー">
+    <button id="info-toggle" class="menu-toggle info-toggle" type="button" aria-label="操作方法・作品情報を開く" aria-expanded="false" aria-controls="info-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6.5 8.5h11a4 4 0 0 1 3.8 5.2l-.8 2.6a2.5 2.5 0 0 1-4.1 1.1L14.2 15h-4.4l-2.2 2.4a2.5 2.5 0 0 1-4.1-1.1l-.8-2.6a4 4 0 0 1 3.8-5.2Z" />
+        <path d="M8 10.8v3.4M6.3 12.5h3.4M16.2 11.5h.1M18.2 13.3h.1" />
+      </svg>
+    </button>
+    <button id="settings-toggle" class="menu-toggle settings-toggle" type="button" aria-label="設定を開く" aria-expanded="false" aria-controls="settings-panel">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" />
+        <path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.8 7.8 0 0 1-1.6.9l-.2 1.5h-3l-.3-1.5a7.8 7.8 0 0 1-1.6-.9l-1.4.5L8 14.4l1.1-.9a7.2 7.2 0 0 1 0-1.8L8 10.8l1.5-2.6 1.4.5a7.8 7.8 0 0 1 1.6-.9l.3-1.5h3l.2 1.5a7.8 7.8 0 0 1 1.6.9l1.4-.5 1.5 2.6-1.1.9a7.2 7.2 0 0 1 0 1.8Z" />
+      </svg>
+    </button>
+  </div>
+
+  <aside id="info-panel" class="info-panel" aria-label="操作方法・作品情報" hidden>
+    <div class="settings-heading">
+      <strong>操作方法・作品情報</strong>
+      <button id="info-close" class="icon-button" type="button" aria-label="閉じる">×</button>
+    </div>
+    <section class="info-controls-section">
+      <strong>操作方法</strong>
+      <p><b>方向キー</b>：移動・選択</p>
+      <p><b>A・B・X・Y</b>：ゲーム内の各ボタン操作</p>
+      <p><b>START</b>：ゲーム開始　 <b>STOP</b>：ゲーム停止</p>
+    </section>
+    <div id="rating-section" class="settings-section rating-section" hidden>
+      <label>作品を応援する</label>
+      <p class="setting-hint">Scratchの公開ページで「好き」や「お気に入り」を付けられます。</p>
+      <a id="scratch-project-link" class="wide-button rating-button" href="#" target="_blank" rel="noopener noreferrer">
+        <span aria-hidden="true">♥ ★</span> Scratchで作品を評価する ↗
+      </a>
+    </div>
+    <section id="project-info-section" class="settings-section project-info-section" aria-label="Scratch作品情報" hidden>
+      <label>作品の説明</label>
+      <p id="project-info-status" class="setting-hint" aria-live="polite">作品情報を取得しています…</p>
+      <div class="project-info-block">
+        <strong>使い方</strong>
+        <p id="project-instructions" class="project-info-text">取得しています…</p>
+      </div>
+      <div class="project-info-block">
+        <strong>メモとクレジット</strong>
+        <p id="project-credits" class="project-info-text">取得しています…</p>
+      </div>
+    </section>
+  </aside>
+
+  <aside id="settings-panel" class="settings-panel" aria-label="プレイヤー設定" hidden>
+    <div class="settings-heading">
+      <strong>プレイヤー設定</strong>
+      <button id="settings-close" class="icon-button" type="button" aria-label="設定を閉じる">×</button>
+    </div>
+
+    <form id="load-form" class="settings-section">
+      <label for="project-url">Scratchゲームのリンク</label>
+      <input id="project-url" type="url" inputmode="url" placeholder="共有URL またはプロジェクトID" value="https://scratch.mit.edu/projects/743160343/" aria-label="Scratch共有URL">
+      <button type="submit" id="load-button" class="primary-button">ゲームを読み込む</button>
+      <p class="setting-hint">Scratchで共有されているプロジェクトを指定してください。正常に読み込めた場合のみ、この設定画面を閉じます。</p>
+    </form>
+
+    <div class="settings-section">
+      <label for="wallpaper-select">本体カラー・デザイン</label>
+      <select id="wallpaper-select">
+        <option value="classic">クラシックグレー</option>
+        <option value="white">ホワイト</option>
+        <option value="red">レッド</option>
+        <option value="clear-purple">クリアパープル（基板風）</option>
+        <option value="custom">オリジナル画像</option>
+      </select>
+      <div id="custom-wallpaper-row" class="custom-wallpaper-row" hidden>
+        <input id="wallpaper-file" type="file" accept="image/*" aria-label="プレイヤー画像を選択">
+        <button id="clear-wallpaper" type="button">画像を解除</button>
+      </div>
+      <p class="setting-hint">ゲームボーイ風の本体カラーを選べます。オリジナル画像は本体の外装に適用され、このブラウザー内に保存されます。</p>
+    </div>
+
+    <div class="settings-section">
+      <button id="fullscreen-button" class="wide-button" type="button">⛶ フルスクリーン</button>
+    </div>
+
+    <!-- 開発者向け：SB3から専用HTMLを生成し、公開URLのQRコードを作成する -->
+    <details class="settings-section developer-section" id="developer-tools">
+      <summary>開発者モード</summary>
+<div class="developer-divider"></div>
+      <label for="sb3-file">SB3ファイル</label>
+      <input id="sb3-file" type="file" accept=".sb3,application/zip">
+      <label for="game-title">ゲーム名</label>
+      <input id="game-title" type="text" maxlength="80" placeholder="ゲームのタイトル">
+      <label for="game-description">説明（任意）</label>
+      <textarea id="game-description" rows="2" maxlength="300" placeholder="ゲームの説明"></textarea>
+      <button id="preview-sb3" type="button" disabled>SB3をプレイヤーで確認</button>
+      <button id="export-html" class="primary-button" type="button" disabled>専用HTMLを生成</button>
+      <p class="setting-hint">SB3データをHTMLに埋め込みます。生成したHTMLをWeb公開すると、URLを知っている人が遊べます。</p>
+      <div class="developer-divider"></div>
+      <label for="published-url">公開したゲームのURL</label>
+      <input id="published-url" type="url" inputmode="url" placeholder="https://example.github.io/game/">
+      <button id="make-qr" type="button">QRコードを生成</button>
+      <div id="qr-output" class="qr-output" aria-live="polite"></div>
+      <button id="download-qr" type="button" hidden>QRコードを保存</button>
+    </details>
+
+    <p id="status" class="settings-status" role="status">Scratchゲームを読み込んでいます…</p>
+  </aside>
+
+  <main class="player-layout">
+    <section class="controls dpad state-neutral" aria-label="方向キー">
+      <button class="control up" data-key="ArrowUp" aria-label="上"></button>
+      <button class="control left" data-key="ArrowLeft" aria-label="左"></button>
+      <button class="control right" data-key="ArrowRight" aria-label="右"></button>
+      <button class="control down" data-key="ArrowDown" aria-label="下"></button>
+    </section>
+
+    <section class="game-area" aria-label="ゲーム画面">
+      <div id="project" class="project">
+        <div id="placeholder" class="placeholder">
+          <div class="loader" aria-hidden="true"></div>
+          <p id="loading-status">Scratchゲームを読み込んでいます…</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="action-area" aria-label="アクションボタン">
+      <div class="controls action-buttons">
+        <button class="control button-x" data-key="x" aria-label="X">X</button>
+        <button class="control button-y" data-key="y" aria-label="Y">Y</button>
+        <button class="control button-a" data-key="a" aria-label="A">A</button>
+        <button class="control button-b" data-key="b" aria-label="B">B</button>
+      </div>
+      <div class="system-buttons" aria-label="ゲーム操作">
+        <button id="green-flag" class="system-button start-button" type="button">START</button>
+        <button id="stop-button" class="system-button stop-button" type="button">STOP</button>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
