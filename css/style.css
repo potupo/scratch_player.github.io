@@ -358,7 +358,7 @@ button:disabled { opacity: .55; cursor: wait; }
   content: "";
   position: absolute;
   z-index: 1;
-  inset: -30%;
+  inset: -8%;
   pointer-events: none;
   background-image: var(--dpad-image);
   background-position: center;
@@ -411,13 +411,7 @@ button:disabled { opacity: .55; cursor: wait; }
 .dpad.tilt-down.tilt-left { --dpad-face-x: -6px; --dpad-face-y: 6px; --dpad-rotate-x: 5deg; --dpad-rotate-y: -5deg; --dpad-light-x: 100%; --dpad-light-y: 0%; --dpad-side-angle: 315deg; }
 .dpad.tilt-down.tilt-right { --dpad-face-x: 6px; --dpad-face-y: 6px; --dpad-rotate-x: 5deg; --dpad-rotate-y: 5deg; --dpad-light-x: 0%; --dpad-light-y: 0%; --dpad-side-angle: 45deg; }
 
-.action-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(8px, 1.5vh, 16px);
-}
+/* ABXYとSTART/STOPはplayer-layout直下の独立したグリッド要素 */
 .action-buttons { width: min(100%, 210px); }
 .action-buttons .control {
   width: var(--size);
@@ -640,7 +634,8 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
   .player-layout {
     /* 左右の操作エリアを初期版に近い幅へ戻し、中央のゲーム画面を拡大 */
     grid-template-columns: minmax(100px, 19vw) minmax(0, 1fr) minmax(100px, 19vw);
-    grid-template-rows: minmax(0, 1fr);
+    /* 1段目は十字キー・ABXYを同じ高さに揃え、2段目をSTART/STOP専用にする */
+    grid-template-rows: minmax(0, 1fr) auto;
     max-width: 1500px;
     margin: auto;
     width: 100%;
@@ -656,14 +651,23 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
     border-radius: 12px;
     /* box-shadow: 0 0 0 2px var(--screen-edge), 0 10px 24px #0008; */
   }
-  .action-area {
+  /* 十字キーとABXYを別々のグリッド要素として同じ行・中央位置に配置 */
+  .action-buttons {
     grid-column: 3;
     grid-row: 1;
-    gap: 90px;
-    width: 100%;
+    width: min(100%, var(--controls-size-landscape));
+    justify-self: center;
+    align-self: center;
   }
-  .action-buttons { width: min(100%, var(--controls-size-landscape)); }
-  .system-buttons { gap: 8px; }
+  /* START/STOPはABXYとは独立した2段目。上下位置はCSS変数で調整 */
+  .system-buttons {
+    grid-column: 3;
+    grid-row: 2;
+    justify-self: center;
+    align-self: start;
+    width: auto;
+    gap: 8px;
+  }
   .system-button { min-width: 68px; min-height: 28px; }
   .player-layout {
     background-color: var(--shell-mid);
@@ -723,19 +727,22 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
     width: var(--controls-size-portrait);
     margin: 4px auto 8px;
   }
-  /* display: contents にして、ABXYとSTART/STOPを親グリッド上に配置する */
-  .action-area { display: contents; }
+  /* 十字キーとABXYは別要素。同じ行で各カラムの中央に配置 */
   .action-buttons {
     grid-column: 2;
     grid-row: 2;
     width: var(--controls-size-portrait);
+    justify-self: center;
+    align-self: center;
     margin: 4px auto 8px;
   }
+  /* START/STOPは独立した要素としてABXYの下段へ。横位置はABXYの中心 */
   .system-buttons {
-    /* ABXYキーと同じ右カラムに置き、ABXYキー群の横中心に揃える */
     grid-column: 2;
     grid-row: 3;
     justify-self: center;
+    align-self: start;
+    width: auto;
     padding-top: 5px;
     gap: 12px;
   }
@@ -783,6 +790,17 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
 .qr-output { display: grid; place-items: center; min-height: 0; padding: 8px; background: #ffffff; border-radius: 8px; }
 .qr-output:empty { display: none; }
 .qr-output img, .qr-output canvas { display: block; max-width: 100%; height: auto; }
+.qr-url-output {
+  margin: 0;
+  padding: 8px 10px;
+  border: 1px solid #414959;
+  border-radius: 8px;
+  background: #10141c;
+  color: #cbd5e1;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
 
 .sc-layers{
   width: 100% !important;
