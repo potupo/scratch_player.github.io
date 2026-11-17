@@ -105,10 +105,10 @@
       <button id="export-html" class="primary-button" type="button" disabled>専用HTMLを生成</button>
       <p class="setting-hint">SB3データをHTMLに埋め込みます。生成したHTMLをWeb公開すると、URLを知っている人が遊べます。</p>
       <div class="developer-divider"></div>
-      <label for="published-url">公開したゲームのURL</label>
-      <input id="published-url" type="url" inputmode="url" placeholder="https://example.github.io/game/">
-      <button id="make-qr" type="button">QRコードを生成</button>
+      <p class="setting-hint">現在公開しているこのプレイヤーのURLを使って、読み込み中のScratch作品を開くQRコードを作成します。</p>
+      <button id="make-qr" type="button">このゲームのQRコードを生成</button>
       <div id="qr-output" class="qr-output" aria-live="polite"></div>
+      <p id="qr-url-output" class="qr-url-output" hidden></p>
       <button id="download-qr" type="button" hidden>QRコードを保存</button>
     </details>
 
@@ -132,18 +132,16 @@
       </div>
     </section>
 
-    <section class="action-area" aria-label="アクションボタン">
-      <div class="controls action-buttons">
-        <button class="control button-x" data-key="x" aria-label="X">X</button>
-        <button class="control button-y" data-key="y" aria-label="Y">Y</button>
-        <button class="control button-a" data-key="a" aria-label="A">A</button>
-        <button class="control button-b" data-key="b" aria-label="B">B</button>
-      </div>
-      <div class="system-buttons" aria-label="ゲーム操作">
-        <button id="green-flag" class="system-button start-button" type="button">START</button>
-        <button id="stop-button" class="system-button stop-button" type="button">STOP</button>
-      </div>
+    <section class="controls action-buttons" aria-label="アクションボタン">
+      <button class="control button-x" data-key="x" aria-label="X">X</button>
+      <button class="control button-y" data-key="y" aria-label="Y">Y</button>
+      <button class="control button-a" data-key="a" aria-label="A">A</button>
+      <button class="control button-b" data-key="b" aria-label="B">B</button>
     </section>
+    <div class="system-buttons" aria-label="ゲーム操作">
+      <button id="green-flag" class="system-button start-button" type="button">START</button>
+      <button id="stop-button" class="system-button stop-button" type="button">STOP</button>
+    </div>
   </main>
 </body>
 </html>
