@@ -583,7 +583,25 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     }
   });
 
-  document.getElementById('make-qr').addEventListener('click', () => {
+  // QRCodeライブラリが初期読み込みに失敗していても、ボタン操作時に再読み込みする。
+  function ensureQRCodeLibrary() {
+    if (window.QRCode) return Promise.resolve(window.QRCode);
+
+    const sources = [
+      'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
+      'https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js'
+    ];
+
+    return sources.reduce((promise, src) => promise.catch(() => new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = src;
+      script.onload = () => window.QRCode ? resolve(window.QRCode) : reject(new Error('QRコードライブラリを確認できません。'));
+      script.onerror = () => reject(new Error('QRコードライブラリを読み込めません。'));
+      document.head.appendChild(script);
+    })), Promise.reject(new Error('QRコードライブラリを読み込めません。')));
+  }
+
+  document.getElementById('make-qr').addEventListener('click', async () => {
     qrOutput.replaceChildren();
     generatedQrCanvas = null;
     downloadQrButton.hidden = true;
@@ -594,30 +612,52 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
       statusElement.textContent = 'Scratchゲームを読み込んでからQRコードを生成してください。';
       return;
     }
-
     if (!['http:', 'https:'].includes(window.location.protocol)) {
       statusElement.textContent = 'Web公開されたプレイヤー上でQRコードを生成してください。';
       return;
     }
-    if (!window.QRCode) {
-      statusElement.textContent = 'QRコード機能を読み込めませんでした。ネット接続を確認してください。';
-      return;
+
+    statusElement.textContent = 'QRコードを生成しています…';
+    try {
+      const QRCodeLibrary = await ensureQRCodeLibrary();
+      const playerUrl = new URL(window.location.href);
+      playerUrl.hash = '';
+      playerUrl.searchParams.set('project', loadedProjectId);
+      const qrUrl = playerUrl.href;
+
+      new QRCodeLibrary(qrOutput, {
+        text: qrUrl,
+        width: 220,
+        height: 220,
+        colorDark: '#111318',
+        colorLight: '#ffffff',
+        correctLevel: QRCodeLibrary.CorrectLevel.H
+      });
+
+      qrUrlOutput.textContent = qrUrl;
+      qrUrlOutput.hidden = false;
+      window.setTimeout(() => {
+        generatedQrCanvas = qrOutput.querySelector('canvas') || null;
+        const generatedImage = qrOutput.querySelector('img');
+        if (!generatedQrCanvas && generatedImage && generatedImage.complete) {
+          const canvas = document.createElement('canvas');
+          canvas.width = 220;
+          canvas.height = 220;
+          const context = canvas.getContext('2d');
+          if (context) {
+            context.drawImage(generatedImage, 0, 0, 220, 220);
+            generatedQrCanvas = canvas;
+          }
+        }
+        downloadQrButton.hidden = !generatedQrCanvas;
+        statusElement.textContent = qrOutput.childElementCount
+          ? `QRコードを生成しました（作品ID：${loadedProjectId}）。`
+          : 'QRコードを生成できませんでした。';
+      }, 250);
+    } catch (error) {
+      console.error('QRコード生成エラー:', error);
+      statusElement.textContent = `${error.message || 'QRコードの生成に失敗しました。'} ネット接続を確認してください。`;
     }
-
-    // 現在開いているプレイヤー自身のURLを使い、作品IDを付けてQR化する。
-    const playerUrl = new URL(window.location.href);
-    playerUrl.hash = '';
-    playerUrl.searchParams.set('project', loadedProjectId);
-    const qrUrl = playerUrl.href;
-
-    new QRCode(qrOutput, { text: qrUrl, width: 220, height: 220, colorDark: '#111318', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
-    qrUrlOutput.textContent = qrUrl;
-    qrUrlOutput.hidden = false;
-    window.setTimeout(() => {
-      generatedQrCanvas = qrOutput.querySelector('canvas') || null;
-      downloadQrButton.hidden = !generatedQrCanvas;
-      statusElement.textContent = generatedQrCanvas ? `QRコードを生成しました（作品ID：${loadedProjectId}）。` : 'QRコードを生成できませんでした。';
-    }, 100);
   });
 
   downloadQrButton.addEventListener('click', () => {
