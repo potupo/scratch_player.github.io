@@ -1,4 +1,3 @@
-
 (() => {
   'use strict';
 
@@ -28,7 +27,7 @@
   const gameDescriptionInput = document.getElementById('game-description');
   const exportHtmlButton = document.getElementById('export-html');
   const previewSb3Button = document.getElementById('preview-sb3');
-  const publishedUrlInput = document.getElementById('published-url');
+  const qrUrlOutput = document.getElementById('qr-url-output');
   const qrOutput = document.getElementById('qr-output');
   const downloadQrButton = document.getElementById('download-qr');
   let selectedSb3File = null;
@@ -585,22 +584,35 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   });
 
   document.getElementById('make-qr').addEventListener('click', () => {
-    qrOutput.replaceChildren(); generatedQrCanvas = null; downloadQrButton.hidden = true;
+    qrOutput.replaceChildren();
+    generatedQrCanvas = null;
+    downloadQrButton.hidden = true;
+    qrUrlOutput.hidden = true;
+    qrUrlOutput.textContent = '';
 
     if (!loadedProjectId) {
       statusElement.textContent = 'Scratchゲームを読み込んでからQRコードを生成してください。';
       return;
     }
 
-    const value = publishedUrlInput.value.trim();
-    let parsed;
-    try { parsed = new URL(value); } catch { statusElement.textContent = 'プレイヤーの公開URLを正しく入力してください。'; return; }
-    if (!['http:', 'https:'].includes(parsed.protocol)) { statusElement.textContent = 'HTTPまたはHTTPSのURLを入力してください。'; return; }
-    if (!window.QRCode) { statusElement.textContent = 'QRコード機能を読み込めませんでした。ネット接続を確認してください。'; return; }
+    if (!['http:', 'https:'].includes(window.location.protocol)) {
+      statusElement.textContent = 'Web公開されたプレイヤー上でQRコードを生成してください。';
+      return;
+    }
+    if (!window.QRCode) {
+      statusElement.textContent = 'QRコード機能を読み込めませんでした。ネット接続を確認してください。';
+      return;
+    }
 
-    // 公開先プレイヤーのURLに、現在読み込んでいるScratch作品IDを付ける。
-    parsed.searchParams.set('project', loadedProjectId);
-    new QRCode(qrOutput, { text: parsed.href, width: 220, height: 220, colorDark: '#111318', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    // 現在開いているプレイヤー自身のURLを使い、作品IDを付けてQR化する。
+    const playerUrl = new URL(window.location.href);
+    playerUrl.hash = '';
+    playerUrl.searchParams.set('project', loadedProjectId);
+    const qrUrl = playerUrl.href;
+
+    new QRCode(qrOutput, { text: qrUrl, width: 220, height: 220, colorDark: '#111318', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+    qrUrlOutput.textContent = qrUrl;
+    qrUrlOutput.hidden = false;
     window.setTimeout(() => {
       generatedQrCanvas = qrOutput.querySelector('canvas') || null;
       downloadQrButton.hidden = !generatedQrCanvas;
@@ -878,9 +890,11 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
 
   restoreWallpaper();
   // QRコード経由で開かれた場合はURLのprojectパラメータを優先する。
+  // 数字の作品IDとして妥当な値だけを採用し、それ以外は従来の既定作品を読み込む。
   const startupParams = new URLSearchParams(window.location.search);
-  const startupProjectId = startupParams.has('project')
-    ? startupParams.get('project')
+  const requestedProjectId = startupParams.get('project');
+  const startupProjectId = requestedProjectId && /^\d+$/.test(requestedProjectId)
+    ? requestedProjectId
     : DEFAULT_PROJECT_ID;
   loadProject(startupProjectId);
 })();
