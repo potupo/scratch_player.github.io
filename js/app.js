@@ -337,6 +337,19 @@
         throw new Error('プレイヤーCSSを取得できませんでした。index.htmlを直接開いている場合は、READMEの手順でローカルHTTPサーバーを起動してください。詳細: ' + (error.message || error));
       }
     }
+
+    // ZIP内のD-pad SVG素材を、書き出しHTMLではdata URIにして単体動作を維持する。
+    const dpadStates = ['neutral', 'up', 'down', 'left', 'right', 'up-left', 'up-right', 'down-left', 'down-right'];
+    await Promise.all(dpadStates.map(async state => {
+      const assetName = `state-${state}.svg`;
+      const assetUrl = new URL(`assets/dpad/${assetName}`, document.baseURI);
+      const response = await fetch(assetUrl.href);
+      if (!response.ok) throw new Error(`D-pad素材を読み込めません: ${assetName}`);
+      const svg = await response.text();
+      const dataUrl = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+      const escapedName = assetName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      css = css.replace(new RegExp(`url\\([\\"']?(?:[^)]*\\/)?${escapedName}[\\"']?\\)`, 'g'), `url("${dataUrl}")`);
+    }));
     css = css.replace(/<\/style/gi, '<\\/style');
     const titleLiteral = safeJson(title || 'Scratch Game');
     const descriptionLiteral = safeJson(description || '');
@@ -368,52 +381,10 @@ const heldKeys = new Set();
 let scaffolding = null;
 function status(message) { document.getElementById('loading-status').textContent = message; placeholder.hidden = false; }
 function keyboard() { return scaffolding?.vm?.runtime?.ioDevices?.keyboard || null; }
-const keyDownAt = new Map();
-const pendingKeyUps = new Map();
-const pendingKeyDowns = new Map();
-const queuedKeyUps = new Set();
-const MIN_KEY_DOWN_MS = 45;
-const MIN_KEY_UP_GAP_MS = 20;
 function sendKey(key, isDown) {
  const device = keyboard();
  if (!device) return;
- if (isDown) {
-  // A rapid re-press must not cancel the key-up: Scratch may otherwise see
-  // one continuous hold and miss the second tap.
-  if (pendingKeyDowns.has(key)) return;
-  const pendingUp = pendingKeyUps.get(key);
-  if (pendingUp) {
-   const elapsed = performance.now() - (keyDownAt.get(key) ?? performance.now());
-   const releaseWait = Math.max(0, MIN_KEY_DOWN_MS - elapsed);
-   const timer = setTimeout(() => {
-    pendingKeyDowns.delete(key);
-    keyDownAt.set(key, performance.now());
-    keyboard()?.postData({key, isDown: true});
-    if (queuedKeyUps.delete(key)) sendKey(key, false);
-   }, releaseWait + MIN_KEY_UP_GAP_MS);
-   pendingKeyDowns.set(key, timer);
-   return;
-  }
-  if (keyDownAt.has(key)) return;
-  keyDownAt.set(key, performance.now());
-  device.postData({key, isDown: true});
-  return;
- }
- if (pendingKeyDowns.has(key)) {
-  queuedKeyUps.add(key);
-  return;
- }
- const started = keyDownAt.get(key);
- if (started == null) return;
- if (pendingKeyUps.has(key)) return;
- const wait = Math.max(0, MIN_KEY_DOWN_MS - (performance.now() - started));
- const finish = () => {
-  pendingKeyUps.delete(key);
-  keyDownAt.delete(key);
-  keyboard()?.postData({key, isDown: false});
- };
- if (wait > 0) pendingKeyUps.set(key, setTimeout(finish, wait));
- else finish();
+ device.postData({key, isDown});
 }
 function updateDpadTilt() {
  const dpad = document.querySelector('.dpad');
@@ -488,15 +459,39 @@ function endDpadPointer(event) {
 dpadElement.addEventListener('pointerup', endDpadPointer);
 dpadElement.addEventListener('pointercancel', endDpadPointer);
 dpadElement.addEventListener('lostpointercapture', endDpadPointer);
+const activeActionPointers = new Map();
+const actionKeyCounts = new Map();
 document.querySelectorAll('.action-buttons .control[data-key]').forEach(button => {
  const key = button.dataset.key;
- button.addEventListener('pointerdown', event => { event.preventDefault(); button.setPointerCapture?.(event.pointerId); if (!heldKeys.has(key)) { heldKeys.add(key); sendKey(key, true); button.classList.add('pressed'); } });
- const release = event => { event.preventDefault(); if (heldKeys.delete(key)) sendKey(key, false); button.classList.remove('pressed'); };
- button.addEventListener('pointerup', release); button.addEventListener('pointercancel', release); button.addEventListener('lostpointercapture', () => { if (heldKeys.delete(key)) sendKey(key, false); button.classList.remove('pressed'); });
+ button.addEventListener('pointerdown', event => {
+  if (event.pointerType === 'mouse' && event.button !== 0) return;
+  event.preventDefault();
+  if (activeActionPointers.has(event.pointerId)) return;
+  button.setPointerCapture?.(event.pointerId);
+  activeActionPointers.set(event.pointerId, {key, button});
+  const count = actionKeyCounts.get(key) || 0;
+  actionKeyCounts.set(key, count + 1);
+  if (count === 0) { heldKeys.add(key); sendKey(key, true); }
+  button.classList.add('pressed');
+ });
+ const release = event => {
+  const active = activeActionPointers.get(event.pointerId);
+  if (!active) return;
+  activeActionPointers.delete(event.pointerId);
+  const count = (actionKeyCounts.get(key) || 1) - 1;
+  if (count <= 0) {
+   actionKeyCounts.delete(key); heldKeys.delete(key); sendKey(key, false); button.classList.remove('pressed');
+  } else actionKeyCounts.set(key, count);
+ };
+ button.addEventListener('pointerup', release);
+ button.addEventListener('pointercancel', release);
+ button.addEventListener('lostpointercapture', release);
  button.addEventListener('contextmenu', event => event.preventDefault());
 });
 function releaseAll() {
  activeDpadPointers.clear();
+ activeActionPointers.clear();
+ actionKeyCounts.clear();
  for (const key of heldKeys) sendKey(key, false);
  heldKeys.clear();
  dpadHeldKeys.clear();
@@ -669,49 +664,10 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     return scaffolding?.vm?.runtime?.ioDevices?.keyboard || null;
   }
 
-  const keyDownAt = new Map();
-  const pendingKeyUps = new Map();
-  const pendingKeyDowns = new Map();
-  const queuedKeyUps = new Set();
-  const MIN_KEY_DOWN_MS = 45;
-  const MIN_KEY_UP_GAP_MS = 20;
   function sendKey(key, isDown) {
     const device = keyboardDevice();
     if (!device) return;
-    if (isDown) {
-      if (pendingKeyDowns.has(key)) return;
-      const pendingUp = pendingKeyUps.get(key);
-      if (pendingUp) {
-        const elapsed = performance.now() - (keyDownAt.get(key) ?? performance.now());
-        const releaseWait = Math.max(0, MIN_KEY_DOWN_MS - elapsed);
-        const timer = setTimeout(() => {
-          pendingKeyDowns.delete(key);
-          keyDownAt.set(key, performance.now());
-          keyboardDevice()?.postData({key, isDown: true});
-          if (queuedKeyUps.delete(key)) sendKey(key, false);
-        }, releaseWait + MIN_KEY_UP_GAP_MS);
-        pendingKeyDowns.set(key, timer);
-        return;
-      }
-      if (keyDownAt.has(key)) return;
-      keyDownAt.set(key, performance.now());
-      device.postData({key, isDown: true});
-      return;
-    }
-    if (pendingKeyDowns.has(key)) {
-      queuedKeyUps.add(key);
-      return;
-    }
-    const started = keyDownAt.get(key);
-    if (started == null || pendingKeyUps.has(key)) return;
-    const wait = Math.max(0, MIN_KEY_DOWN_MS - (performance.now() - started));
-    const finish = () => {
-      pendingKeyUps.delete(key);
-      keyDownAt.delete(key);
-      keyboardDevice()?.postData({key, isDown: false});
-    };
-    if (wait > 0) pendingKeyUps.set(key, setTimeout(finish, wait));
-    else finish();
+    device.postData({ key, isDown });
   }
 
   const dpadElement = document.querySelector('.dpad');
@@ -785,50 +741,59 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     dpadElement.addEventListener('contextmenu', event => event.preventDefault());
   }
 
-  function pressKey(key, button) {
-    if (heldKeys.has(key)) return;
-    heldKeys.add(key);
-    sendKey(key, true);
+  const activeActionPointers = new Map();
+  const actionKeyCounts = new Map();
+
+  function pressActionPointer(event, button, key) {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    event.preventDefault();
+    if (activeActionPointers.has(event.pointerId)) return;
+    button.setPointerCapture?.(event.pointerId);
+    activeActionPointers.set(event.pointerId, { key, button });
+    const count = actionKeyCounts.get(key) || 0;
+    actionKeyCounts.set(key, count + 1);
+    if (count === 0) {
+      heldKeys.add(key);
+      sendKey(key, true);
+    }
     button.classList.add('pressed');
-    updateDpadTilt();
   }
 
-  function releaseKey(key, button) {
-    if (!heldKeys.has(key)) return;
-    heldKeys.delete(key);
-    sendKey(key, false);
-    button.classList.remove('pressed');
-    updateDpadTilt();
+  function releaseActionPointer(event) {
+    const active = activeActionPointers.get(event.pointerId);
+    if (!active) return;
+    activeActionPointers.delete(event.pointerId);
+    const { key, button } = active;
+    const count = (actionKeyCounts.get(key) || 1) - 1;
+    if (count <= 0) {
+      actionKeyCounts.delete(key);
+      heldKeys.delete(key);
+      sendKey(key, false);
+      button.classList.remove('pressed');
+    } else {
+      actionKeyCounts.set(key, count);
+    }
   }
+
+  document.querySelectorAll('.action-buttons .control[data-key]').forEach(button => {
+    const key = button.dataset.key;
+    button.addEventListener('pointerdown', event => pressActionPointer(event, button, key));
+    button.addEventListener('pointerup', releaseActionPointer);
+    button.addEventListener('pointercancel', releaseActionPointer);
+    button.addEventListener('lostpointercapture', releaseActionPointer);
+    button.addEventListener('contextmenu', event => event.preventDefault());
+  });
 
   function releaseAllKeys() {
     activeDpadPointers.clear();
+    activeActionPointers.clear();
+    actionKeyCounts.clear();
     for (const key of heldKeys) sendKey(key, false);
     heldKeys.clear();
     dpadHeldKeys.clear();
     document.querySelectorAll('.control.pressed').forEach(button => button.classList.remove('pressed'));
     updateDpadTilt();
   }
-
-  document.querySelectorAll('.action-buttons .control[data-key]').forEach(button => {
-    const key = button.dataset.key;
-
-    button.addEventListener('pointerdown', event => {
-      event.preventDefault();
-      button.setPointerCapture?.(event.pointerId);
-      pressKey(key, button);
-    });
-
-    const release = event => {
-      event.preventDefault();
-      releaseKey(key, button);
-    };
-
-    button.addEventListener('pointerup', release);
-    button.addEventListener('pointercancel', release);
-    button.addEventListener('lostpointercapture', () => releaseKey(key, button));
-    button.addEventListener('contextmenu', event => event.preventDefault());
-  });
 
   document.getElementById('load-form').addEventListener('submit', event => {
     event.preventDefault();
