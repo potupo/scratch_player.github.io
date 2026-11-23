@@ -404,6 +404,7 @@ function updateDpadTilt() {
 }
 const activeDpadPointers = new Map();
 const dpadHeldKeys = new Set();
+const dpadReleaseTimers = new Map();
 function getDpadDirectionKeys(event) {
  const rect = dpadElement.getBoundingClientRect();
  const dx = (event.clientX - (rect.left + rect.width / 2)) / (rect.width / 2);
@@ -422,17 +423,23 @@ function refreshDpadInput() {
   for (const key of keys) nextKeys.add(key);
  }
  for (const key of dpadHeldKeys) {
-  if (!nextKeys.has(key)) {
-   sendKey(key, false);
-   heldKeys.delete(key);
-   dpadHeldKeys.delete(key);
+  if (!nextKeys.has(key) && !dpadReleaseTimers.has(key)) {
+   // Scratchはフレーム単位でキー状態を読むため、短すぎるタップを取りこぼさないよう短い保持時間を設ける。
+   const timer = setTimeout(() => {
+    dpadReleaseTimers.delete(key);
+    const stillHeld = [...activeDpadPointers.values()].some(keys => keys.has(key));
+    if (!stillHeld && dpadHeldKeys.has(key)) {
+     sendKey(key, false); heldKeys.delete(key); dpadHeldKeys.delete(key); updateDpadTilt();
+    }
+   }, 45);
+   dpadReleaseTimers.set(key, timer);
   }
  }
  for (const key of nextKeys) {
+  const timer = dpadReleaseTimers.get(key);
+  if (timer) { clearTimeout(timer); dpadReleaseTimers.delete(key); }
   if (!dpadHeldKeys.has(key)) {
-   sendKey(key, true);
-   heldKeys.add(key);
-   dpadHeldKeys.add(key);
+   sendKey(key, true); heldKeys.add(key); dpadHeldKeys.add(key);
   }
  }
  updateDpadTilt();
@@ -461,37 +468,87 @@ dpadElement.addEventListener('pointercancel', endDpadPointer);
 dpadElement.addEventListener('lostpointercapture', endDpadPointer);
 const activeActionPointers = new Map();
 const actionKeyCounts = new Map();
-document.querySelectorAll('.action-buttons .control[data-key]').forEach(button => {
- const key = button.dataset.key;
- button.addEventListener('pointerdown', event => {
-  if (event.pointerType === 'mouse' && event.button !== 0) return;
-  event.preventDefault();
-  if (activeActionPointers.has(event.pointerId)) return;
-  button.setPointerCapture?.(event.pointerId);
-  activeActionPointers.set(event.pointerId, {key, button});
+const actionKeyDownTimes = new Map();
+const actionKeyReleaseTimers = new Map();
+const ACTION_MIN_PRESS_MS = 60;
+const actionButtons = [...document.querySelectorAll('.action-buttons .control[data-key]')];
+const actionButtonsElement = document.querySelector('.action-buttons');
+function getActionButtonsAtPoint(event) {
+ const candidates = actionButtons.map(button => {
+  const rect = button.getBoundingClientRect();
+  const cx = rect.left + rect.width / 2;
+  const cy = rect.top + rect.height / 2;
+  return {button, key: button.dataset.key, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78};
+ }).sort((a, b) => a.distance - b.distance);
+ if (!candidates.length || candidates[0].distance > candidates[0].radius) return [];
+ const selected = [candidates[0]];
+ // 親指が隣接ボタンの間にある場合、近接する2ボタンを同時入力にする。
+ if (candidates[1] && candidates[1].distance <= candidates[1].radius) selected.push(candidates[1]);
+ return selected.map(item => item.button);
+}
+function pressActionPointer(event) {
+ if (event.pointerType === 'mouse' && event.button !== 0) return;
+ event.preventDefault();
+ if (activeActionPointers.has(event.pointerId)) return;
+ const buttons = getActionButtonsAtPoint(event);
+ if (!buttons.length) return;
+ actionButtonsElement.setPointerCapture?.(event.pointerId);
+ const keys = buttons.map(button => button.dataset.key);
+ activeActionPointers.set(event.pointerId, {keys, buttons});
+ for (const button of buttons) {
+  const key = button.dataset.key;
   const count = actionKeyCounts.get(key) || 0;
   actionKeyCounts.set(key, count + 1);
-  if (count === 0) { heldKeys.add(key); sendKey(key, true); }
+  if (count === 0) {
+   const releaseTimer = actionKeyReleaseTimers.get(key);
+   if (releaseTimer) { clearTimeout(releaseTimer); actionKeyReleaseTimers.delete(key); }
+   if (!heldKeys.has(key)) {
+    heldKeys.add(key);
+    actionKeyDownTimes.set(key, performance.now());
+    sendKey(key, true);
+   }
+  }
   button.classList.add('pressed');
- });
- const release = event => {
-  const active = activeActionPointers.get(event.pointerId);
-  if (!active) return;
-  activeActionPointers.delete(event.pointerId);
+ }
+}
+function releaseActionPointer(event) {
+ const active = activeActionPointers.get(event.pointerId);
+ if (!active) return;
+ activeActionPointers.delete(event.pointerId);
+ for (const button of active.buttons) {
+  const key = button.dataset.key;
   const count = (actionKeyCounts.get(key) || 1) - 1;
   if (count <= 0) {
-   actionKeyCounts.delete(key); heldKeys.delete(key); sendKey(key, false); button.classList.remove('pressed');
+   actionKeyCounts.delete(key);
+   button.classList.remove('pressed');
+   const downTime = actionKeyDownTimes.get(key) ?? performance.now();
+   const remaining = Math.max(0, ACTION_MIN_PRESS_MS - (performance.now() - downTime));
+   const releaseTimer = setTimeout(() => {
+    actionKeyReleaseTimers.delete(key);
+    if ((actionKeyCounts.get(key) || 0) === 0 && heldKeys.has(key)) {
+     heldKeys.delete(key);
+     actionKeyDownTimes.delete(key);
+     sendKey(key, false);
+    }
+   }, remaining);
+   actionKeyReleaseTimers.set(key, releaseTimer);
   } else actionKeyCounts.set(key, count);
- };
- button.addEventListener('pointerup', release);
- button.addEventListener('pointercancel', release);
- button.addEventListener('lostpointercapture', release);
- button.addEventListener('contextmenu', event => event.preventDefault());
-});
+ }
+}
+actionButtonsElement.addEventListener('pointerdown', pressActionPointer);
+actionButtonsElement.addEventListener('pointerup', releaseActionPointer);
+actionButtonsElement.addEventListener('pointercancel', releaseActionPointer);
+actionButtonsElement.addEventListener('lostpointercapture', releaseActionPointer);
+actionButtonsElement.addEventListener('contextmenu', event => event.preventDefault());
 function releaseAll() {
  activeDpadPointers.clear();
+ for (const timer of dpadReleaseTimers.values()) clearTimeout(timer);
+ dpadReleaseTimers.clear();
  activeActionPointers.clear();
  actionKeyCounts.clear();
+ for (const timer of actionKeyReleaseTimers.values()) clearTimeout(timer);
+ actionKeyReleaseTimers.clear();
+ actionKeyDownTimes.clear();
  for (const key of heldKeys) sendKey(key, false);
  heldKeys.clear();
  dpadHeldKeys.clear();
@@ -673,6 +730,7 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   const dpadElement = document.querySelector('.dpad');
   const dpadHeldKeys = new Set();
   const activeDpadPointers = new Map();
+  const dpadReleaseTimers = new Map();
   function updateDpadTilt() {
     if (!dpadElement) return;
     const up = dpadHeldKeys.has('ArrowUp') && !dpadHeldKeys.has('ArrowDown');
@@ -702,17 +760,22 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     const nextKeys = new Set();
     for (const keys of activeDpadPointers.values()) for (const key of keys) nextKeys.add(key);
     for (const key of dpadHeldKeys) {
-      if (!nextKeys.has(key)) {
-        sendKey(key, false);
-        heldKeys.delete(key);
-        dpadHeldKeys.delete(key);
+      if (!nextKeys.has(key) && !dpadReleaseTimers.has(key)) {
+        const timer = setTimeout(() => {
+          dpadReleaseTimers.delete(key);
+          const stillHeld = [...activeDpadPointers.values()].some(keys => keys.has(key));
+          if (!stillHeld && dpadHeldKeys.has(key)) {
+            sendKey(key, false); heldKeys.delete(key); dpadHeldKeys.delete(key); updateDpadTilt();
+          }
+        }, 45);
+        dpadReleaseTimers.set(key, timer);
       }
     }
     for (const key of nextKeys) {
+      const timer = dpadReleaseTimers.get(key);
+      if (timer) { clearTimeout(timer); dpadReleaseTimers.delete(key); }
       if (!dpadHeldKeys.has(key)) {
-        sendKey(key, true);
-        heldKeys.add(key);
-        dpadHeldKeys.add(key);
+        sendKey(key, true); heldKeys.add(key); dpadHeldKeys.add(key);
       }
     }
     updateDpadTilt();
@@ -743,51 +806,87 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
 
   const activeActionPointers = new Map();
   const actionKeyCounts = new Map();
-
-  function pressActionPointer(event, button, key) {
+  const actionKeyDownTimes = new Map();
+  const actionKeyReleaseTimers = new Map();
+  const ACTION_MIN_PRESS_MS = 60;
+  const actionButtons = [...document.querySelectorAll('.action-buttons .control[data-key]')];
+  const actionButtonsElement = document.querySelector('.action-buttons');
+  function getActionButtonsAtPoint(event) {
+    const candidates = actionButtons.map(button => {
+      const rect = button.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      return { button, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78 };
+    }).sort((a, b) => a.distance - b.distance);
+    if (!candidates.length || candidates[0].distance > candidates[0].radius) return [];
+    const selected = [candidates[0]];
+    if (candidates[1] && candidates[1].distance <= candidates[1].radius) selected.push(candidates[1]);
+    return selected.map(item => item.button);
+  }
+  function pressActionPointer(event) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     event.preventDefault();
     if (activeActionPointers.has(event.pointerId)) return;
-    button.setPointerCapture?.(event.pointerId);
-    activeActionPointers.set(event.pointerId, { key, button });
-    const count = actionKeyCounts.get(key) || 0;
-    actionKeyCounts.set(key, count + 1);
-    if (count === 0) {
-      heldKeys.add(key);
-      sendKey(key, true);
+    const buttons = getActionButtonsAtPoint(event);
+    if (!buttons.length) return;
+    actionButtonsElement.setPointerCapture?.(event.pointerId);
+    const keys = buttons.map(button => button.dataset.key);
+    activeActionPointers.set(event.pointerId, { keys, buttons });
+    for (const button of buttons) {
+      const key = button.dataset.key;
+      const count = actionKeyCounts.get(key) || 0;
+      actionKeyCounts.set(key, count + 1);
+      if (count === 0) {
+        const releaseTimer = actionKeyReleaseTimers.get(key);
+        if (releaseTimer) { clearTimeout(releaseTimer); actionKeyReleaseTimers.delete(key); }
+        if (!heldKeys.has(key)) {
+          heldKeys.add(key);
+          actionKeyDownTimes.set(key, performance.now());
+          sendKey(key, true);
+        }
+      }
+      button.classList.add('pressed');
     }
-    button.classList.add('pressed');
   }
-
   function releaseActionPointer(event) {
     const active = activeActionPointers.get(event.pointerId);
     if (!active) return;
     activeActionPointers.delete(event.pointerId);
-    const { key, button } = active;
-    const count = (actionKeyCounts.get(key) || 1) - 1;
-    if (count <= 0) {
-      actionKeyCounts.delete(key);
-      heldKeys.delete(key);
-      sendKey(key, false);
-      button.classList.remove('pressed');
-    } else {
-      actionKeyCounts.set(key, count);
+    for (const button of active.buttons) {
+      const key = button.dataset.key;
+      const count = (actionKeyCounts.get(key) || 1) - 1;
+      if (count <= 0) {
+        actionKeyCounts.delete(key);
+        button.classList.remove('pressed');
+        const downTime = actionKeyDownTimes.get(key) ?? performance.now();
+        const remaining = Math.max(0, ACTION_MIN_PRESS_MS - (performance.now() - downTime));
+        const releaseTimer = setTimeout(() => {
+          actionKeyReleaseTimers.delete(key);
+          if ((actionKeyCounts.get(key) || 0) === 0 && heldKeys.has(key)) {
+            heldKeys.delete(key);
+            actionKeyDownTimes.delete(key);
+            sendKey(key, false);
+          }
+        }, remaining);
+        actionKeyReleaseTimers.set(key, releaseTimer);
+      } else actionKeyCounts.set(key, count);
     }
   }
-
-  document.querySelectorAll('.action-buttons .control[data-key]').forEach(button => {
-    const key = button.dataset.key;
-    button.addEventListener('pointerdown', event => pressActionPointer(event, button, key));
-    button.addEventListener('pointerup', releaseActionPointer);
-    button.addEventListener('pointercancel', releaseActionPointer);
-    button.addEventListener('lostpointercapture', releaseActionPointer);
-    button.addEventListener('contextmenu', event => event.preventDefault());
-  });
+  actionButtonsElement.addEventListener('pointerdown', pressActionPointer);
+  actionButtonsElement.addEventListener('pointerup', releaseActionPointer);
+  actionButtonsElement.addEventListener('pointercancel', releaseActionPointer);
+  actionButtonsElement.addEventListener('lostpointercapture', releaseActionPointer);
+  actionButtonsElement.addEventListener('contextmenu', event => event.preventDefault());
 
   function releaseAllKeys() {
     activeDpadPointers.clear();
+    for (const timer of dpadReleaseTimers.values()) clearTimeout(timer);
+    dpadReleaseTimers.clear();
     activeActionPointers.clear();
     actionKeyCounts.clear();
+    for (const timer of actionKeyReleaseTimers.values()) clearTimeout(timer);
+    actionKeyReleaseTimers.clear();
+    actionKeyDownTimes.clear();
     for (const key of heldKeys) sendKey(key, false);
     heldKeys.clear();
     dpadHeldKeys.clear();

@@ -5,9 +5,9 @@
  <linearGradient id="sideDark" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#394451"/><stop offset="1" stop-color="#151b23"/></linearGradient>
  <linearGradient id="face" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#626d7b"/><stop offset=".28" stop-color="#4a5261"/><stop offset=".80" stop-color="#252b35"/><stop offset="1" stop-color="#171c24"/></linearGradient>
  <radialGradient id="softLight" cx="38%" cy="38%" r="65%"><stop stop-color="#ffffff" stop-opacity=".19"/><stop offset=".42" stop-color="#ffffff" stop-opacity=".07"/><stop offset="1" stop-color="#ffffff" stop-opacity="0"/></radialGradient>
-</defs>
-<g>
+</defs><g>
 <path d="M 31,0 L 69,0 L 69,31 L 100,31 L 100,69 L 69,69 L 69,100 L 31,100 L 31,69 L 0,69 L 0,31 L 31,31 Z" fill="#111820" transform="translate(-0.75 -0.75) scale(1.015)"/>
+
 <g><polygon points="40.51,7.33 70.5,8.01 64,0 36,0" fill="url(#sideLit)"/><polygon points="70.65,40.66 105.92,40.89 100,36 64,36" fill="url(#sideLit)"/><polygon points="40.34,107.42 40.39,70.94 36,64 36,100" fill="url(#sideLit)"/><polygon points="6.51,70.83 6.87,40.16 0,36 0,64" fill="url(#sideLit)"/><polygon points="6.87,40.16 40.46,40.38 36,36 0,36" fill="url(#sideLit)"/><polygon points="40.46,40.38 40.51,7.33 36,0 36,36" fill="url(#sideLit)"/></g>
 <path d="M 40.51,7.33 L 70.5,8.01 L 70.65,40.66 L 105.92,40.89 L 106.36,71.19 L 70.86,71.08 L 71.03,107.3 L 40.34,107.42 L 40.39,70.94 L 6.51,70.83 L 6.87,40.16 L 40.46,40.38 Z" fill="url(#face)" stroke="#141a22" stroke-width="1.0" stroke-linejoin="round"/>
 <path d="M 40.51,7.33 L 70.5,8.01 L 70.65,40.66 L 105.92,40.89 L 106.36,71.19 L 70.86,71.08 L 71.03,107.3 L 40.34,107.42 L 40.39,70.94 L 6.51,70.83 L 6.87,40.16 L 40.46,40.38 Z" fill="url(#softLight)"/>
