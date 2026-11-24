@@ -3,7 +3,8 @@
 
   const DEFAULT_PROJECT_ID = '743160343';
   const projectElement = document.getElementById('project');
-  const statusElement = document.getElementById('status');
+  // 設定画面下部の状態表示（ログ）は削除済み。各処理からの書き込みが失敗しないよう、画面に出ない要素で受け止める
+  const statusElement = document.getElementById('status') || document.createElement('p');
   const loadingStatusElement = document.getElementById('loading-status');
   const settingsPanel = document.getElementById('settings-panel');
   const settingsToggle = document.getElementById('settings-toggle');
@@ -184,11 +185,11 @@
     const instructions = typeof projectInfo.instructions === 'string' ? projectInfo.instructions.trim() : '';
     const credits = typeof projectInfo.description === 'string' ? projectInfo.description.trim() : '';
 
-    projectInstructions.textContent = instructions || 'この作品には「使い方」の記載がありません。';
+    projectInstructions.textContent = instructions || 'この作品には「操作方法」の記載がありません。';
     projectInstructions.classList.toggle('is-empty', !instructions);
     projectCredits.textContent = credits || 'この作品には「メモとクレジット」の記載がありません。';
     projectCredits.classList.toggle('is-empty', !credits);
-    projectInfoStatus.textContent = 'Scratchの作品情報から取得しました。';
+    // 「Scratchの作品情報から取得しました」の表示は削除済み（要素があれば何も書かない）
   }
 
   async function fetchProjectData(projectId) {
@@ -246,11 +247,20 @@
     scaffolding.appendTo(projectElement);
   }
 
+  // ゲームの読み込みに失敗した時だけ、リンク入力欄の下に理由を表示する（message を空にすると消える）
+  const loadErrorElement = document.getElementById('load-error');
+  function showLoadError(message) {
+    if (!loadErrorElement) return;
+    loadErrorElement.textContent = message;
+    loadErrorElement.hidden = !message;
+  }
+
   async function loadProject(value) {
     const thisLoad = ++loadSequence;
     let projectId;
 
     try {
+      showLoadError('');
       projectId = extractProjectId(value);
       loadButton.disabled = true;
       setStatus('ゲームデータを取得しています…');
@@ -287,6 +297,7 @@
     } catch (error) {
       if (thisLoad === loadSequence) {
         setStatus(error.message || '読み込みに失敗しました。');
+        showLoadError(error.message || '読み込みに失敗しました。');
         openSettings();
         console.error(error);
       }
@@ -478,12 +489,19 @@ function getActionButtonsAtPoint(event) {
   const rect = button.getBoundingClientRect();
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
-  return {button, key: button.dataset.key, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78};
+  return {button, key: button.dataset.key, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78, size: Math.min(rect.width, rect.height)};
  }).sort((a, b) => a.distance - b.distance);
- if (!candidates.length || candidates[0].distance > candidates[0].radius) return [];
+ if (!candidates.length) return [];
+ // 2つのボタンの間を押している時は、少し外側（ボタンの大きさ×0.95以内）まで反応させる
+ const isPair = Boolean(candidates[1] && candidates[1].distance <= candidates[1].size * 1.1 && candidates[1].distance <= candidates[0].distance * 2.0
+  // ひし形の真ん中のように3つ以上が同じくらい近い時は同時押しにしない
+  && !(candidates[2] && candidates[2].distance < candidates[1].distance * 1.15));
+ if (candidates[0].distance > (isPair ? candidates[0].size * 0.95 : candidates[0].radius)) return [];
  const selected = [candidates[0]];
  // 親指が隣接ボタンの間にある場合、近接する2ボタンを同時入力にする。
- if (candidates[1] && candidates[1].distance <= candidates[1].radius) selected.push(candidates[1]);
+ // 判定を甘くするため、2つ目のボタンは「ボタンの大きさ×1.1以内」かつ「1つ目までの距離の2.0倍以内」なら同時押しにする。
+ // 数値を大きくすると同時押しになりやすく、小さくすると単押しになりやすい。
+ if (isPair) selected.push(candidates[1]);
  return selected.map(item => item.button);
 }
 function pressActionPointer(event) {
@@ -540,6 +558,13 @@ actionButtonsElement.addEventListener('pointerup', releaseActionPointer);
 actionButtonsElement.addEventListener('pointercancel', releaseActionPointer);
 actionButtonsElement.addEventListener('lostpointercapture', releaseActionPointer);
 actionButtonsElement.addEventListener('contextmenu', event => event.preventDefault());
+// iPhone対策：ボタンを触っている間、iPhoneが長押し・スクロールの判定をしてゲームの処理を止めてしまうため、
+// 十字キー・ABXYのタッチ操作を既定の動作から切り離す（入力そのものは pointer イベントで処理）
+for (const element of [dpadElement, actionButtonsElement]) {
+ if (!element) continue;
+ element.addEventListener('touchstart', event => event.preventDefault(), { passive: false });
+ element.addEventListener('touchmove', event => event.preventDefault(), { passive: false });
+}
 function releaseAll() {
  activeDpadPointers.clear();
  for (const timer of dpadReleaseTimers.values()) clearTimeout(timer);
@@ -653,6 +678,12 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     })), Promise.reject(new Error('QRコードライブラリを読み込めません。')));
   }
 
+  // QRコードの案内・エラーは、QRコードの下の文字欄に表示する
+  function showQrMessage(message) {
+    qrUrlOutput.textContent = message;
+    qrUrlOutput.hidden = false;
+  }
+
   document.getElementById('make-qr').addEventListener('click', async () => {
     qrOutput.replaceChildren();
     generatedQrCanvas = null;
@@ -661,11 +692,11 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     qrUrlOutput.textContent = '';
 
     if (!loadedProjectId) {
-      statusElement.textContent = 'Scratchゲームを読み込んでからQRコードを生成してください。';
+      showQrMessage('Scratchゲームを読み込んでからQRコードを生成してください。');
       return;
     }
     if (!['http:', 'https:'].includes(window.location.protocol)) {
-      statusElement.textContent = 'Web公開されたプレイヤー上でQRコードを生成してください。';
+      showQrMessage('Web公開されたプレイヤー上でQRコードを生成してください。');
       return;
     }
 
@@ -702,13 +733,11 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
           }
         }
         downloadQrButton.hidden = !generatedQrCanvas;
-        statusElement.textContent = qrOutput.childElementCount
-          ? `QRコードを生成しました（作品ID：${loadedProjectId}）。`
-          : 'QRコードを生成できませんでした。';
+        if (!qrOutput.childElementCount) showQrMessage('QRコードを生成できませんでした。');
       }, 250);
     } catch (error) {
       console.error('QRコード生成エラー:', error);
-      statusElement.textContent = `${error.message || 'QRコードの生成に失敗しました。'} ネット接続を確認してください。`;
+      showQrMessage(`${error.message || 'QRコードの生成に失敗しました。'} ネット接続を確認してください。`);
     }
   });
 
@@ -726,6 +755,7 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     if (!device) return;
     device.postData({ key, isDown });
   }
+
 
   const dpadElement = document.querySelector('.dpad');
   const dpadHeldKeys = new Set();
@@ -816,11 +846,18 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
       const rect = button.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      return { button, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78 };
+      return { button, distance: Math.hypot(event.clientX - cx, event.clientY - cy), radius: Math.min(rect.width, rect.height) * 0.78, size: Math.min(rect.width, rect.height) };
     }).sort((a, b) => a.distance - b.distance);
-    if (!candidates.length || candidates[0].distance > candidates[0].radius) return [];
+    if (!candidates.length) return [];
+    // 2つのボタンの間を押している時は、少し外側（ボタンの大きさ×0.95以内）まで反応させる
+    const isPair = Boolean(candidates[1] && candidates[1].distance <= candidates[1].size * 1.1 && candidates[1].distance <= candidates[0].distance * 2.0
+     // ひし形の真ん中のように3つ以上が同じくらい近い時は同時押しにしない
+     && !(candidates[2] && candidates[2].distance < candidates[1].distance * 1.15));
+    if (candidates[0].distance > (isPair ? candidates[0].size * 0.95 : candidates[0].radius)) return [];
     const selected = [candidates[0]];
-    if (candidates[1] && candidates[1].distance <= candidates[1].radius) selected.push(candidates[1]);
+    // 同時押しの判定を甘くするため、2つ目のボタンは「ボタンの大きさ×1.1以内」かつ「1つ目までの距離の2.0倍以内」なら同時押しにする。
+    // 数値を大きくすると同時押しになりやすく、小さくすると単押しになりやすい（専用HTMLのテンプレート側も同じ値）
+    if (isPair) selected.push(candidates[1]);
     return selected.map(item => item.button);
   }
   function pressActionPointer(event) {
@@ -877,6 +914,15 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   actionButtonsElement.addEventListener('pointercancel', releaseActionPointer);
   actionButtonsElement.addEventListener('lostpointercapture', releaseActionPointer);
   actionButtonsElement.addEventListener('contextmenu', event => event.preventDefault());
+
+  // iPhone対策：ボタンを触っている間、iPhoneが長押し・スクロールの判定をしてゲームの処理を止めてしまうため、
+  // 十字キー・ABXYのタッチ操作を既定の動作から切り離す（入力そのものは pointer イベントで処理）。
+  // 専用HTMLのテンプレート側にも同じ処理がある
+  for (const element of [dpadElement, actionButtonsElement]) {
+    if (!element) continue;
+    element.addEventListener('touchstart', event => event.preventDefault(), { passive: false });
+    element.addEventListener('touchmove', event => event.preventDefault(), { passive: false });
+  }
 
   function releaseAllKeys() {
     activeDpadPointers.clear();

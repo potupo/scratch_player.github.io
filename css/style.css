@@ -194,6 +194,8 @@ button:disabled { opacity: .55; cursor: wait; }
   stroke-linejoin: round;
 }
 .settings-toggle svg { width: 24px; height: 24px; }
+/* アイコンの中の塗りつぶす部分（コントローラーの十字キー・ボタン） */
+.menu-toggle svg .icon-fill { fill: currentColor; stroke: none; }
 .menu-toggle:active { transform: scale(.95); }
 
 .settings-panel {
@@ -253,7 +255,27 @@ button:disabled { opacity: .55; cursor: wait; }
   border-radius: 8px;
   background: #343a48;
   font-size: 22px;
+  /* ×は文字だとフォントによって上下左右にずれるため、文字は隠して2本の線で描き、ボタンの真ん中に置く */
+  position: relative;
+  padding: 0;
+  color: transparent;
+  overflow: hidden;
+  --icon-button-x-size: 14px;   /* ×の大きさ */
+  --icon-button-x-weight: 2px;  /* ×の線の太さ */
 }
+.icon-button::before,
+.icon-button::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--icon-button-x-size);
+  height: var(--icon-button-x-weight);
+  border-radius: 999px;
+  background: #f5f6fa;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+.icon-button::after { transform: translate(-50%, -50%) rotate(-45deg); }
 .settings-section {
   display: grid;
   gap: 8px;
@@ -304,9 +326,14 @@ button:disabled { opacity: .55; cursor: wait; }
 }
 .rating-button:active { filter: brightness(1.12); }
 .rating-button span { color: #ffd1df; letter-spacing: .08em; }
+/* 評価ボタンのハート（ピンク）と星（黄色） */
+.rating-button .rating-heart { color: #ff6fae; }
+.rating-button .rating-star { color: #ffd43b; }
 
 /* Scratch作品ページから取得した「使い方」「メモとクレジット」 */
-.project-info-section { gap: 10px; }
+.project-info-section { gap: 14px; }
+/* 中項目（見出し＋枠）。見出しと枠の間は gap、中項目どうしの間は .project-info-section の gap で調整 */
+.project-info-group { display: grid; gap: 7px; min-width: 0; }
 .project-info-block {
   display: grid;
   gap: 5px;
@@ -335,6 +362,20 @@ button:disabled { opacity: .55; cursor: wait; }
   font-size: 10px;
   line-height: 1.5;
 }
+/* ゲームの読み込みに失敗した時のエラー表示（色は --load-error-color で調整） */
+.setting-error {
+  --load-error-color: #ff8a8a;
+  margin: 0;
+  padding: 7px 9px;
+  border: 1px solid color-mix(in srgb, var(--load-error-color) 45%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--load-error-color) 12%, transparent);
+  color: var(--load-error-color);
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.setting-error[hidden] { display: none; }
 .custom-wallpaper-row { display: flex; gap: 7px; }
 .custom-wallpaper-row input { flex: 1; }
 .custom-wallpaper-row button { flex: none; }

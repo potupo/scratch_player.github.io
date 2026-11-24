@@ -14,14 +14,18 @@
   <div class="top-buttons" aria-label="プレイヤーメニュー">
     <button id="info-toggle" class="menu-toggle info-toggle" type="button" aria-label="操作方法・作品情報を開く" aria-expanded="false" aria-controls="info-panel">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M6.5 8.5h11a4 4 0 0 1 3.8 5.2l-.8 2.6a2.5 2.5 0 0 1-4.1 1.1L14.2 15h-4.4l-2.2 2.4a2.5 2.5 0 0 1-4.1-1.1l-.8-2.6a4 4 0 0 1 3.8-5.2Z" />
-        <path d="M8 10.8v3.4M6.3 12.5h3.4M16.2 11.5h.1M18.2 13.3h.1" />
+        <!-- ゲームコントローラー：本体（左右に握り）、左に十字キー、右にボタン2つ -->
+        <path d="M7.2 6.5h9.6a4.6 4.6 0 0 1 4.5 3.7l1.1 5.7a2.7 2.7 0 0 1-4.6 2.4L15.6 16H8.4l-2.2 2.3a2.7 2.7 0 0 1-4.6-2.4l1.1-5.7a4.6 4.6 0 0 1 4.5-3.7Z" />
+        <path class="icon-fill" d="M6.7 9.2h1.6v1.6h1.6v1.6H8.3V14H6.7v-1.6H5.1v-1.6h1.6Z" />
+        <circle class="icon-fill" cx="16.6" cy="12.6" r="1.15" />
+        <circle class="icon-fill" cx="18.7" cy="10.5" r="1.15" />
       </svg>
     </button>
     <button id="settings-toggle" class="menu-toggle settings-toggle" type="button" aria-label="設定を開く" aria-expanded="false" aria-controls="settings-panel">
       <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 8.8a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 0 0 0-6.4Z" />
-        <path d="m19.4 13.5 1.1.9-1.5 2.6-1.4-.5a7.8 7.8 0 0 1-1.6.9l-.2 1.5h-3l-.3-1.5a7.8 7.8 0 0 1-1.6-.9l-1.4.5L8 14.4l1.1-.9a7.2 7.2 0 0 1 0-1.8L8 10.8l1.5-2.6 1.4.5a7.8 7.8 0 0 1 1.6-.9l.3-1.5h3l.2 1.5a7.8 7.8 0 0 1 1.6.9l1.4-.5 1.5 2.6-1.1.9a7.2 7.2 0 0 1 0 1.8Z" />
+        <!-- 歯車（8枚歯）と中心の穴 -->
+        <path d="M10.05 4.96 L10.31 2.14 L13.69 2.14 L13.95 4.96 L15.60 5.65 L17.77 3.83 L20.17 6.23 L18.35 8.40 L19.04 10.05 L21.86 10.31 L21.86 13.69 L19.04 13.95 L18.35 15.60 L20.17 17.77 L17.77 20.17 L15.60 18.35 L13.95 19.04 L13.69 21.86 L10.31 21.86 L10.05 19.04 L8.40 18.35 L6.23 20.17 L3.83 17.77 L5.65 15.60 L4.96 13.95 L2.14 13.69 L2.14 10.31 L4.96 10.05 L5.65 8.40 L3.83 6.23 L6.23 3.83 L8.40 5.65Z" />
+        <circle cx="12" cy="12" r="3" />
       </svg>
     </button>
   </div>
@@ -31,31 +35,28 @@
       <strong>操作方法・作品情報</strong>
       <button id="info-close" class="icon-button" type="button" aria-label="閉じる">×</button>
     </div>
-    <section class="info-controls-section">
-      <strong>操作方法</strong>
-      <p><b>方向キー</b>：移動・選択</p>
-      <p><b>A・B・X・Y</b>：ゲーム内の各ボタン操作</p>
-      <p><b>START</b>：ゲーム開始　 <b>STOP</b>：ゲーム停止</p>
+    <section id="project-info-section" class="settings-section project-info-section" aria-label="Scratch作品情報" hidden>
+      <!-- 中項目：見出しは枠の外、本文だけを枠の中に表示する -->
+      <div class="project-info-group">
+        <label>操作方法</label>
+        <div class="project-info-block">
+          <p id="project-instructions" class="project-info-text">取得しています…</p>
+        </div>
+      </div>
+      <div class="project-info-group">
+        <label>メモとクレジット</label>
+        <div class="project-info-block">
+          <p id="project-credits" class="project-info-text">取得しています…</p>
+        </div>
+      </div>
     </section>
     <div id="rating-section" class="settings-section rating-section" hidden>
       <label>作品を応援する</label>
       <p class="setting-hint">Scratchの公開ページで「好き」や「お気に入り」を付けられます。</p>
       <a id="scratch-project-link" class="wide-button rating-button" href="#" target="_blank" rel="noopener noreferrer">
-        <span aria-hidden="true">♥ ★</span> Scratchで作品を評価する ↗
+        <span aria-hidden="true"><span class="rating-heart">♥</span> <span class="rating-star">★</span></span> Scratchで作品を評価する
       </a>
     </div>
-    <section id="project-info-section" class="settings-section project-info-section" aria-label="Scratch作品情報" hidden>
-      <label>作品の説明</label>
-      <p id="project-info-status" class="setting-hint" aria-live="polite">作品情報を取得しています…</p>
-      <div class="project-info-block">
-        <strong>使い方</strong>
-        <p id="project-instructions" class="project-info-text">取得しています…</p>
-      </div>
-      <div class="project-info-block">
-        <strong>メモとクレジット</strong>
-        <p id="project-credits" class="project-info-text">取得しています…</p>
-      </div>
-    </section>
   </aside>
 
   <aside id="settings-panel" class="settings-panel" aria-label="プレイヤー設定" hidden>
@@ -68,6 +69,8 @@
       <label for="project-url">Scratchゲームのリンク</label>
       <input id="project-url" type="url" inputmode="url" placeholder="共有URL またはプロジェクトID" value="https://scratch.mit.edu/projects/743160343/" aria-label="Scratch共有URL">
       <button type="submit" id="load-button" class="primary-button">ゲームを読み込む</button>
+      <!-- 読み込みに失敗した時だけ理由を表示する -->
+      <p id="load-error" class="setting-error" role="alert" hidden></p>
       <p class="setting-hint">Scratchで共有されているプロジェクトを指定してください。正常に読み込めた場合のみ、この設定画面を閉じます。</p>
     </form>
 
@@ -90,7 +93,17 @@
       <button id="fullscreen-button" class="wide-button" type="button">⛶ フルスクリーン</button>
     </div>
 
-    <!-- 開発者向け：SB3から専用HTMLを生成し、公開URLのQRコードを作成する -->
+    <!-- QRコード：読み込み中のScratch作品を、このプレイヤーで開くQRコードを作成する -->
+    <div class="settings-section qr-section">
+      <label for="make-qr">QRコード</label>
+      <button id="make-qr" type="button">このゲームのQRコードを生成</button>
+      <div id="qr-output" class="qr-output" aria-live="polite"></div>
+      <p id="qr-url-output" class="setting-hint" hidden></p>
+      <button id="download-qr" type="button" hidden>QRコードを保存</button>
+      <p class="setting-hint">このプレイヤーのURLを使って、読み込み中のScratch作品を開くQRコードを作成します。</p>
+    </div>
+
+    <!-- 開発者向け：SB3から専用HTMLを生成する -->
     <details class="settings-section developer-section" id="developer-tools">
       <summary>開発者モード</summary>
 <div class="developer-divider"></div>
@@ -103,15 +116,8 @@
       <button id="preview-sb3" type="button" disabled>SB3をプレイヤーで確認</button>
       <button id="export-html" class="primary-button" type="button" disabled>専用HTMLを生成</button>
       <p class="setting-hint">SB3データをHTMLに埋め込みます。生成したHTMLをWeb公開すると、URLを知っている人が遊べます。</p>
-      <div class="developer-divider"></div>
-      <p class="setting-hint">現在公開しているこのプレイヤーのURLを使って、読み込み中のScratch作品を開くQRコードを作成します。</p>
-      <button id="make-qr" type="button">このゲームのQRコードを生成</button>
-      <div id="qr-output" class="qr-output" aria-live="polite"></div>
-      <p id="qr-url-output" class="setting-hint" hidden></p>
-      <button id="download-qr" type="button" hidden>QRコードを保存</button>
     </details>
 
-    <p id="status" class="settings-status" role="status">Scratchゲームを読み込んでいます…</p>
   </aside>
 
   <main class="player-layout">
