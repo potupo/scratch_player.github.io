@@ -22,7 +22,7 @@
   --text-muted: #aab1bf;
   --shell-radius: 28px;
   /* 本体の外側の角（縦画面・横画面で共通）。今は四隅とも同じ丸み（--shell-radius）。
-     右下だけ大きく丸めたいとき（ゲームボーイ風）は、--shell-radius-accent を数値（例：72px）にします */
+     右下だけ大きく丸めたいとき（レトロな携帯ゲーム機風）は、--shell-radius-accent を数値（例：72px）にします */
   --shell-radius-accent: var(--shell-radius);
   --shell-corners: var(--shell-radius) var(--shell-radius) var(--shell-radius-accent) var(--shell-radius);
 
@@ -773,7 +773,7 @@ button:disabled { opacity: .55; cursor: wait; }
 }
 .player-layout > * { position: relative; z-index: 1; }
 
-/* 初代ゲームボーイをイメージしたグレー */
+/* レトロな携帯ゲーム機をイメージしたグレー */
 body[data-wallpaper="classic"] .player-layout {
   --shell-top: #c4c0b7;
   --shell-mid: #aaa69e;
@@ -787,14 +787,14 @@ body[data-wallpaper="classic"] .player-layout {
   --dpad-stroke: #1d2227;
   --key-active: #8995a0;
   --preset-skin-image: linear-gradient(145deg, #d2cec5, #aaa69e 58%, #85847d);
-  /* ボタンの色：ABXYは赤紫（初代ゲームボーイのA/Bボタン風）、START/STOPは灰色。十字キーは黒のまま */
+  /* ボタンの色：ABXYは赤紫（レトロな携帯ゲーム機のA/Bボタン風）、START/STOPは灰色。十字キーは黒のまま */
   --abxy-face: linear-gradient(150deg, #b23a68, #7d1a44);
   --abxy-text: #f6dbe6;
   --system-button-face: linear-gradient(150deg, #a3a1a6, #6f6d73);
   --system-button-text: #2b2a2f;
 }
 
-/* ゲームボーイポケット風の明るいホワイト */
+/* 明るいホワイト */
 body[data-wallpaper="white"] .player-layout {
   --shell-top: #ffffff;
   --shell-mid: #e9edf0;
@@ -836,8 +836,75 @@ body[data-wallpaper="red"] .player-layout {
 /* body[data-wallpaper="red"] .button-b { background: linear-gradient(145deg, #f2a0a0, #b8424d); } */
 /* body[data-wallpaper="red"] .button-a { background: linear-gradient(145deg, #9bd69c, #448d52); } */
 
+/* ---- カラフルな携帯ゲーム機風の4色（ボタンは他の色と同じく黒） ----
+   本体の色は --preset-skin-image（左上→右下のグラデーション）と --shell-top/mid/bottom で調整 */
+
+/* ベリー：ピンク寄りの濃い赤 */
+body[data-wallpaper="berry"] .player-layout {
+  --shell-top: #e8467f;
+  --shell-mid: #c8265a;
+  --shell-bottom: #861640;
+  --screen-frame: #3d1a27;
+  --screen-edge: #f58db0;
+  --key-gradient: linear-gradient(145deg, #3e4149, #171a21);
+  --key-shadow: #5a1530;
+  --dpad-light: #4a4d56;
+  --dpad-dark: #20232a;
+  --dpad-stroke: #17191f;
+  --key-active: #d0668c;
+  --preset-skin-image: linear-gradient(145deg, #ec5a8c, #c8265a 56%, #8e1a45);
+}
+
+/* パープル（グレープ）：落ち着いた濃い紫 */
+body[data-wallpaper="purple"] .player-layout {
+  --shell-top: #7d5ab3;
+  --shell-mid: #5b3a8c;
+  --shell-bottom: #39225c;
+  --screen-frame: #2a2136;
+  --screen-edge: #a88bd6;
+  --key-gradient: linear-gradient(145deg, #3e4149, #171a21);
+  --key-shadow: #2a1846;
+  --dpad-light: #4a4d56;
+  --dpad-dark: #20232a;
+  --dpad-stroke: #17191f;
+  --key-active: #8e72bd;
+  --preset-skin-image: linear-gradient(145deg, #8463ba, #5b3a8c 56%, #3c2462);
+}
+
+/* イエロー（ダンデライオン）：明るい黄色 */
+body[data-wallpaper="yellow"] .player-layout {
+  --shell-top: #ffe066;
+  --shell-mid: #f2c41a;
+  --shell-bottom: #b88a0c;
+  --screen-frame: #3a3528;
+  --screen-edge: #fff0a8;
+  --key-gradient: linear-gradient(145deg, #3e4149, #171a21);
+  --key-shadow: #8a6a10;
+  --dpad-light: #4a4d56;
+  --dpad-dark: #20232a;
+  --dpad-stroke: #17191f;
+  --key-active: #e0b84a;
+  --preset-skin-image: linear-gradient(145deg, #ffe680, #f2c41a 56%, #c4950f);
+}
+
+/* ティール：青緑（ターコイズ寄り） */
+body[data-wallpaper="teal"] .player-layout {
+  --shell-top: #3fb5c2;
+  --shell-mid: #1d8f9e;
+  --shell-bottom: #0f5a64;
+  --screen-frame: #1d3236;
+  --screen-edge: #8ad8e0;
+  --key-gradient: linear-gradient(145deg, #3e4149, #171a21);
+  --key-shadow: #0f4850;
+  --dpad-light: #4a4d56;
+  --dpad-dark: #20232a;
+  --dpad-stroke: #17191f;
+  --key-active: #5cbcc7;
+  --preset-skin-image: linear-gradient(145deg, #48bcc8, #1d8f9e 56%, #12636e);
+}
+
 /* =========================================================
-   LANDSCAPE: GAME BOY ADVANCE INSPIRED
+   LANDSCAPE: WIDE HANDHELD STYLE
    横画面の左右コントローラーと中央画面の配置
    ========================================================= */
 @media (orientation: landscape) {
@@ -918,7 +985,7 @@ body[data-wallpaper="red"] .player-layout {
 }
 
 /* =========================================================
-   PORTRAIT: GAME BOY INSPIRED
+   PORTRAIT: CLASSIC HANDHELD STYLE
    上に画面、下に左右のキーと、そのさらに下にSTART/STOP
    ========================================================= */
 @media (orientation: portrait) {
