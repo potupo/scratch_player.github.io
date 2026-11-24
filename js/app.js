@@ -128,7 +128,7 @@
   function applyWallpaper(name) {
     const aliases = { default: 'classic', gradient: 'classic', grid: 'classic', gameboy: 'white' };
     const normalized = aliases[name] || name;
-    const allowed = ['classic', 'white', 'red', 'clear-purple', 'custom'];
+    const allowed = ['classic', 'white', 'red', 'custom'];
     const selected = allowed.includes(normalized) ? normalized : 'classic';
     const playerLayout = document.querySelector('.player-layout');
     document.body.dataset.wallpaper = selected;

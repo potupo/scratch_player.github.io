@@ -21,17 +21,103 @@
   --text-main: #f4f5f7;
   --text-muted: #aab1bf;
   --shell-radius: 28px;
+  /* 本体の外側の角（縦画面・横画面で共通）。今は四隅とも同じ丸み（--shell-radius）。
+     右下だけ大きく丸めたいとき（ゲームボーイ風）は、--shell-radius-accent を数値（例：72px）にします */
+  --shell-radius-accent: var(--shell-radius);
+  --shell-corners: var(--shell-radius) var(--shell-radius) var(--shell-radius-accent) var(--shell-radius);
+
+  /* 縦画面の本体の形（携帯ゲーム機風）：上の角は小さく丸め、下の辺はゆるい弧を描く。
+     --shell-radius-top-portrait：上の2つの角の丸み
+     --shell-bottom-curve-portrait：下の辺のふくらみ（弧の高さ）。0px で直線、大きいほど丸くなる */
+  --shell-radius-top-portrait: 12px;
+  --shell-bottom-curve-portrait: 44px;
+  --shell-corners-portrait:
+    var(--shell-radius-top-portrait) var(--shell-radius-top-portrait) 50% 50% /
+    var(--shell-radius-top-portrait) var(--shell-radius-top-portrait) var(--shell-bottom-curve-portrait) var(--shell-bottom-curve-portrait);
   --shell-shadow: 0 18px 48px #0008, inset 0 2px 1px #ffffff18, inset 0 -5px 12px #0005;
+  /* 本体のベベル（縁の面取り。縦画面・横画面で共通）。
+     本体の外形に沿った同じ太さの帯を、左上は明るく・右下は暗く塗って、縁が斜めに削られて見えるようにする */
+  --shell-bevel-width: 3.5px;
+  --shell-bevel: linear-gradient(160deg, #ffffff80 0%, #ffffff33 30%, #00000010 55%, #00000047 100%);
+  /* 本体の縁取り（縦画面・横画面で共通）。上から順に
+     「外側の細い縁取り」「ベベルと表面の境目の細い線（ベベルの太さ＋1px）」。
+     どちらも影をずらさず広げるだけなので、本体の形にそのまま沿う */
+  --shell-depth:
+    0 0 0 1px #ffffff1a,
+    inset 0 0 0 calc(var(--shell-bevel-width) + 1px) #0000001c;
+  /* 本体の表面に当たる斜めの光（左上が明るく、右下が少し暗い） */
+  --shell-sheen: linear-gradient(160deg, #ffffff26, transparent 35%, transparent 70%, #00000014);
   --padding01:24.5%;
   --padding02:-22%;
   --size: 50%;
 
-  /* 操作キーのサイズ調整：画面の向きごとに数値を変更できます。 */
-  --controls-size-landscape: min(15vw, 170px);
-  --controls-size-portrait: min(32vw, 160px);
+  /* 操作キーのサイズ調整。縦画面・横画面で同じ大きさに見えるよう共通の値を使います。
+     vmin（画面の短い辺の1%）なので、同じ端末なら縦横で同じ大きさになります。 */
+  /* すべてのボタン（十字キー・ABXY・START/STOP）の大きさの倍率。1 で元の大きさ、0.8 で80% */
+  --button-scale: 0.8;
+  --controls-size: calc(min(32vmin, 160px) * var(--button-scale));
+  /* 画面の向きごとに変えたいときは、下の2つを個別の数値にしてください */
+  --controls-size-landscape: var(--controls-size);
+  --controls-size-portrait: var(--controls-size);
 
   /* START/STOPの上下位置：プラスで下、マイナスで上へ移動します。 */
   --system-buttons-offset-y: 0px;
+
+  /* 縦画面：START/STOPをBボタンの下に置くための下げ幅。
+     Bボタンは操作キー枠の下へ約22%はみ出しているので、その分だけ下げます。
+     末尾の数値（-2px）を大きくすると下へ、小さくすると上へ動きます（小さくしすぎるとBボタンと重なります）。 */
+  --system-buttons-clearance-portrait: calc(var(--controls-size-portrait) * 0.22 - 2px);
+
+  /* 縦画面：ゲーム画面の上の余白（画面とボタンの間の余白を 1 としたときの割合） */
+  --screen-top-space-portrait: 0.5fr;
+
+  /* 縦画面：本体の縦横比の上限（高さ ÷ 横幅）。これより縦長の画面では、本体を縮めて上下を黒帯にする。
+     大きくすると黒帯が細く（本体が縦に長く）、小さくすると黒帯が太くなります */
+  --portrait-max-aspect: 1.7;
+  /* 縦画面：上下の黒帯の色 */
+  --letterbox-color: #000000;
+  /* ゲーム画面の枠の上下の太さ（左右の太さに対する倍率）。縦画面・横画面で共通。1 で四辺同じ */
+  --screen-bezel-y-scale: 2;
+  /* 向きごとに変えたいときは、下の2つを個別の数値にしてください */
+  --screen-bezel-y-scale-portrait: var(--screen-bezel-y-scale);
+  --screen-bezel-y-scale-landscape: var(--screen-bezel-y-scale);
+  /* ゲーム画面の枠の下に入れる文字（縦画面・横画面で共通）。
+     --screen-label-space：文字のために枠の下を太くする量（0px で文字の場所なし）
+     --screen-label-height：文字の高さ
+     --screen-label-image：文字の画像。文字を消すときは none にする */
+  --screen-label-space: 30px;
+  --screen-label-height: 22px;
+  --screen-label-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 230 30'%3E%3Ctext x='115' y='24' text-anchor='middle' font-family='Avenir Next, Segoe UI, Arial, sans-serif' font-size='25' font-weight='800' font-style='italic' letter-spacing='1.5' fill='%23dfe3e9'%3EGAME PLAYER%3C/text%3E%3C/svg%3E");
+
+  /* 縦画面：十字キーの左端・Aボタンの右端を、ゲーム画面の黒枠の端からどれだけ内側に置くか。0px で黒枠の端とそろう */
+  --controls-inset-portrait: 0px;
+  /* 縦画面：上の黒帯をどれだけ残すか（1 でそのまま、0.5 で半分）。
+     細くした分だけ本体が上へ伸び、画面・ボタンも一緒に上へ動く（スピーカーと本体の下の端は動かない） */
+  --letterbox-top-keep-portrait: 0.5;
+  /* 縦画面：本体の左右の余白。ゲーム画面の枠と、十字キー・Aボタンの外側の端がこの位置にそろう。
+     本体の左右の側面（--shell-depth の 6px）より大きくしてください */
+  --shell-side-padding-portrait: 12px;
+  /* 縦画面：右上の設定ボタンの大きさと、上の黒帯の上下のすき間（上の黒帯の中に収める） */
+  --menu-toggle-size-portrait: 30px;
+  --menu-toggle-gap-portrait: 6px;
+
+  /* 縦画面：十字キー・ABXYを持ち上げる量（大きいほど上へ。START/STOPとの間が広がります） */
+  --controls-raise-portrait: 16px;
+  /* 縦画面：START/STOPと、十字キー・ABXYの間を広げる量（大きいほどSTART/STOPが下がる） */
+  --system-buttons-extra-gap-portrait: 30px;
+  /* 縦画面：本体の下の余白の基本値。マイナスにすると、ボタン一式を下の弧の近くまで下げられる
+     （実際の余白は、これに下の弧と上へ伸ばした分を足した値。中央のSTART/STOPは弧の一番深い所なので欠けない） */
+  --shell-bottom-padding-portrait: -32px;
+
+  /* 十字キーの大きさ（ABXYのキー枠に対する倍率）。縦画面・横画面で共通。
+     ABXYは枠の外へはみ出して並ぶため、十字キーを同じくらいの見た目にするには 1 より大きくします */
+  --dpad-scale: 1.3;
+  --dpad-scale-landscape: var(--dpad-scale);
+  --dpad-scale-portrait: var(--dpad-scale);
+
+  /* ゲーム画面の枠（ベゼル）の太さ。縦画面・横画面で共通。
+     vmin（画面の短い辺の1%）を使うので、同じ端末なら縦横で同じ太さになります。 */
+  --screen-bezel-size: min(4vmin, 18px);
 }
 
 * { box-sizing: border-box; }
@@ -295,6 +381,36 @@ button:disabled { opacity: .55; cursor: wait; }
   overflow: hidden;
   background: #050608;
   border: 1px solid #343945;
+
+  /* ---------------------------------------------------------
+     SCREEN BEZEL：ゲーム画面の枠の描き方（縦横共通）
+     枠の太さは :root の --screen-bezel-size（縦横共通）、
+     枠の色は各本体カラーの --screen-frame で変更します。
+     上から順に「画面の黒地」「画面まわりの段差（暗い縁）」「枠の光沢」「枠の地色」。
+     --------------------------------------------------------- */
+  --screen-bezel: 1px;
+  /* 枠の上下の太さ。ふだんは左右と同じ。縦画面では上下だけ太くしている（PORTRAIT の .project） */
+  --screen-bezel-y: var(--screen-bezel);
+  /* 枠の上の太さと下の太さ。下は文字（GAME PLAYER）を入れる分（:root の --screen-label-space）だけ太い */
+  --screen-bezel-top: var(--screen-bezel-y);
+  --screen-bezel-bottom: calc(var(--screen-bezel-y) + var(--screen-label-space));
+  --screen-lip-width: 2px;   /* 画面と枠の間の段差の太さ。0pxで段差なし */
+  --screen-bezel-layers:
+    linear-gradient(#050608, #050608) padding-box,
+    /* 画面まわりの段差：画面（枠の内側）より --screen-lip-width だけ大きい暗い四角 */
+    linear-gradient(#000000a6, #000000a6)
+      calc(var(--screen-bezel) - var(--screen-lip-width)) calc(var(--screen-bezel-top) - var(--screen-lip-width)) /
+      calc(100% - 2 * var(--screen-bezel) + 2 * var(--screen-lip-width)) calc(100% - var(--screen-bezel-top) - var(--screen-bezel-bottom) + 2 * var(--screen-lip-width))
+      no-repeat border-box,
+    /* 枠の下の文字。文字を変えるときは下の「GAME PLAYER」を書きかえる（色は fill='%23dfe3e9' の dfe3e9 の部分。書体は斜体の極太） */
+    var(--screen-label-image)
+      center bottom calc((var(--screen-bezel-bottom) - var(--screen-label-height)) / 2) /
+      auto var(--screen-label-height)
+      no-repeat border-box,
+    linear-gradient(160deg, #ffffff24, transparent 42%, transparent 70%, #00000030) border-box,
+    linear-gradient(var(--screen-frame), var(--screen-frame)) border-box;
+  /* 枠の外側のごく細い縁取り（本体にはめ込まれた感じ）。不要なら none */
+  box-shadow: 0 1px 0 #ffffff40, 0 -1px 0 #00000026;
 }
 .project > * { max-width: 100%; max-height: 100%; }
 .placeholder {
@@ -353,6 +469,18 @@ button:disabled { opacity: .55; cursor: wait; }
   isolation: isolate;
   overflow: visible;
   --dpad-image: url("../assets/dpad/state-neutral.svg");
+  /* 9状態の素材を最初にまとめて読み込んでおく（先読み）。
+     初めて押した方向の画像を読み込む間、十字キーが一瞬消えて点滅するのを防ぐ。
+     1px角で十字キーの枠の外（左上の見えない位置）に置くので画面には表示されない。 */
+  background:
+    url("../assets/dpad/state-up.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-down.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-left.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-right.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-up-left.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-up-right.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-down-left.svg") -2px -2px / 1px 1px no-repeat,
+    url("../assets/dpad/state-down-right.svg") -2px -2px / 1px 1px no-repeat;
 }
 .dpad::before {
   content: "";
@@ -479,6 +607,107 @@ button:disabled { opacity: .55; cursor: wait; }
 .stop-button { color: #f1b2b2; } */
 
 /* =========================================================
+   BUTTON FEEL：ボタンの立体感と押し込み表現（見た目のみ。入力判定には影響しません）
+   ========================================================= */
+/* ABXY・START/STOPは十字キー（assets/dpad の素材）と同じ質感にそろえる。
+   十字キー素材と同じ色・同じ描き方：
+   ・表面：左上→右下の平らなグラデーション（素材の #454a52 → #1e2125）
+   ・縁：左上に細い白のハイライト、右下に細い黒の影、外側に濃い輪郭線
+   ・下：ぼかした落ち影
+   ぷっくり見える光沢（丸いハイライト）や内側の大きな陰影は使わない。
+   十字キー素材の色を変えたときは、ここの色も合わせて変更してください。 */
+:root {
+  --button-face: linear-gradient(150deg, #454a52, #1e2125);
+  --button-outline: #0d0f12;
+  --button-edge-light: #ffffff38;
+  --button-edge-dark: #00000059;
+  /* 落ち影（十字キー素材のぼかし影と同じくらい） */
+  --button-drop-shadow: 0 2px 4px #00000073;
+  /* 押している間の落ち影（押した側へ沈んで影が短くなる） */
+  --button-drop-shadow-pressed: 0 1px 2px #00000073;
+  /* ボタンの色（本体カラーごとに変えられる）。ふだんはどれも十字キーと同じ黒。
+     --abxy-face / --abxy-text：ABXYの表面と文字の色
+     --system-button-face / --system-button-text：START/STOPの表面と文字の色
+     本体カラーごとの値は CONSOLE COLOR PRESETS の各カラーで上書きする */
+  --abxy-face: var(--button-face);
+  --abxy-text: #e9edf4;
+  --system-button-face: var(--button-face);
+  --system-button-text: #e9edf4;
+}
+.action-buttons .control,
+.system-button {
+  border: 0;
+  background: var(--button-face);
+  box-shadow:
+    0 0 0 1px var(--button-outline),
+    var(--button-drop-shadow),
+    inset 1px 1px 0 var(--button-edge-light),
+    inset -1px -1px 0 var(--button-edge-dark);
+}
+/* 本体カラーごとのボタンの色（ふだんは黒） */
+.action-buttons .control { background: var(--abxy-face); color: var(--abxy-text); }
+.system-button { background: var(--system-button-face); color: var(--system-button-text); }
+/* 以前の丸い光沢は使わない */
+.action-buttons .control::before { content: none; }
+/* ABXYの文字の大きさも --button-scale に合わせて縮める */
+.action-buttons .control { font-size: calc(clamp(17px, 3vw, 27px) * var(--button-scale)); }
+/* 押している間も色は変えない */
+.action-buttons .control.pressed { background: var(--abxy-face); }
+.system-button:active { background: var(--system-button-face); }
+/* 押している間：十字キーと同じく、少しだけ沈んで影が短くなる（色や大きさは変えない） */
+.action-buttons .control.pressed,
+.system-button:active {
+  transform: translateY(1px);
+  filter: none;
+  box-shadow:
+    0 0 0 1px var(--button-outline),
+    var(--button-drop-shadow-pressed),
+    inset 1px 1px 0 var(--button-edge-light),
+    inset -1px -1px 0 var(--button-edge-dark);
+}
+
+/* iPhoneで長押ししたときに、ボタンの文字が選択されたり
+   メニュー（拡大鏡・コピーなど）が出たりしないようにする。
+   ゲーム内の入力欄（Scratchの「質問」）は文字を入力できるように戻す */
+.player-layout {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.player-layout input,
+.player-layout textarea {
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* =========================================================
+   SPEAKER：本体左下のスピーカー穴（装飾のみ）
+   位置は --speaker-left / --speaker-bottom、穴の数は width / height（10pxで1穴。今は横6×縦6）で調整。
+   ========================================================= */
+.player-layout {
+  --speaker-left: 22px;
+  --speaker-bottom: 16px;
+  /* スピーカー穴の表示。今は非表示（none）。表示に戻すときは block にする */
+  --speaker-display: none;
+}
+.player-layout::after {
+  content: "";
+  display: var(--speaker-display);
+  position: absolute;
+  z-index: 0;
+  left: var(--speaker-left);
+  bottom: var(--speaker-bottom);
+  width: 60px;   /* 横6穴 */
+  height: 60px;  /* 縦6穴 */
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 46%, #00000066 0 2.3px, transparent 2.8px) 0 0 / 10px 10px,
+    radial-gradient(circle at 50% 58%, #ffffff4d 0 2.3px, transparent 2.8px) 0 0 / 10px 10px;
+}
+
+/* =========================================================
    CONSOLE COLOR PRESETS
    本体カラー・ボタン・画面フレームをまとめて着せ替える
    ========================================================= */
@@ -489,6 +718,17 @@ button:disabled { opacity: .55; cursor: wait; }
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
+}
+/* 本体のベベル（縁の面取り）：本体の外形に沿った、同じ太さの1本の帯。
+   帯の太さは --shell-bevel-width、明るさ（左上が明るく右下が暗い）は --shell-bevel で調整。
+   帯の内側の形は本体の角の丸み・下の弧にそのまま沿う。 */
+.player-layout::before {
+  padding: var(--shell-bevel-width);
+  background: var(--shell-bevel);
+  /* 内側（content-box）をくり抜いて、縁の帯だけを残す */
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
 .player-layout > * { position: relative; z-index: 1; }
 
@@ -506,6 +746,11 @@ body[data-wallpaper="classic"] .player-layout {
   --dpad-stroke: #1d2227;
   --key-active: #8995a0;
   --preset-skin-image: linear-gradient(145deg, #d2cec5, #aaa69e 58%, #85847d);
+  /* ボタンの色：ABXYは赤紫（初代ゲームボーイのA/Bボタン風）、START/STOPは灰色。十字キーは黒のまま */
+  --abxy-face: linear-gradient(150deg, #b23a68, #7d1a44);
+  --abxy-text: #f6dbe6;
+  --system-button-face: linear-gradient(150deg, #a3a1a6, #6f6d73);
+  --system-button-text: #2b2a2f;
 }
 
 /* ゲームボーイポケット風の明るいホワイト */
@@ -523,10 +768,11 @@ body[data-wallpaper="white"] .player-layout {
   --key-active: #aab8c5;
   --preset-skin-image: linear-gradient(145deg, #ffffff, #e7ebef 58%, #cbd1d7);
 }
-body[data-wallpaper="white"] .button-y { background: linear-gradient(145deg, #e8c96f, #b18a36); }
-body[data-wallpaper="white"] .button-x { background: linear-gradient(145deg, #8bb8e5, #527eae); }
-body[data-wallpaper="white"] .button-b { background: linear-gradient(145deg, #ed9292, #b84f59); }
-body[data-wallpaper="white"] .button-a { background: linear-gradient(145deg, #91d29b, #4e9a61); }
+/* ボタンはどの本体カラーでも黒にそろえるため、以前の色付きABXYは使わない */
+/* body[data-wallpaper="white"] .button-y { background: linear-gradient(145deg, #e8c96f, #b18a36); } */
+/* body[data-wallpaper="white"] .button-x { background: linear-gradient(145deg, #8bb8e5, #527eae); } */
+/* body[data-wallpaper="white"] .button-b { background: linear-gradient(145deg, #ed9292, #b84f59); } */
+/* body[data-wallpaper="white"] .button-a { background: linear-gradient(145deg, #91d29b, #4e9a61); } */
 
 /* レトロなレッド筐体 */
 body[data-wallpaper="red"] .player-layout {
@@ -543,91 +789,11 @@ body[data-wallpaper="red"] .player-layout {
   --key-active: #b85a65;
   --preset-skin-image: linear-gradient(145deg, #f56a61, #c3333d 56%, #852331);
 }
-body[data-wallpaper="red"] .button-y { background: linear-gradient(145deg, #f4d16a, #bd8b2f); }
-body[data-wallpaper="red"] .button-x { background: linear-gradient(145deg, #8bc1ef, #3c70a8); }
-body[data-wallpaper="red"] .button-b { background: linear-gradient(145deg, #f2a0a0, #b8424d); }
-body[data-wallpaper="red"] .button-a { background: linear-gradient(145deg, #9bd69c, #448d52); }
-
-/* クリアパープル：透明スケルトン筐体。配線・IC・ネジ・樹脂反射を重ねる */
-body[data-wallpaper="clear-purple"] .player-layout {
-  --shell-top: #d7b2f0;
-  --shell-mid: #8752b6;
-  --shell-bottom: #49266e;
-  --screen-frame: #39204f;
-  --screen-edge: #e7c9ff;
-  --key-gradient: linear-gradient(145deg, #80619b, #3a2450);
-  --key-shadow: #28143a;
-  --dpad-light: #9273aa;
-  --dpad-dark: #43275c;
-  --dpad-stroke: #2b173e;
-  --key-active: #c59be2;
-  /* 下地は不透明なベタ塗りにせず、紫色の透明樹脂を重ねた表現 */
-  --preset-skin-image:
-    linear-gradient(132deg, #f5dcff9c 0%, #c18be45c 18%, #6e3e9c9c 58%, #3d205fbd 100%),
-    radial-gradient(ellipse at 15% 8%, #ffffffa6 0%, #f2d8ff40 19%, transparent 42%),
-    linear-gradient(145deg, #bd8cdd, #71419b 54%, #432565);
-  background-color: #704292;
-  border: 2px solid #e9caffb8;
-  box-shadow:
-    0 18px 48px #0009,
-    inset 0 2px 2px #ffffff9c,
-    inset 0 -8px 18px #2a124c88,
-    inset 0 0 0 4px #5c347d88;
-  backdrop-filter: saturate(1.45) contrast(1.04);
-}
-
-/* 基板の配線パターンとパッド。筐体の下に透けて見えるレイヤー */
-body[data-wallpaper="clear-purple"] .player-layout::before {
-  opacity: 1;
-  background-image:
-    /* 配線の直角パターン */
-    linear-gradient(90deg, transparent 0 9%, #f2d5ffb0 9.2% 9.7%, transparent 9.9% 100%),
-    linear-gradient(0deg, transparent 0 18%, #3d1d62b8 18.2% 18.7%, transparent 18.9% 100%),
-    linear-gradient(90deg, transparent 0 77%, #f4d9ff99 77.2% 77.7%, transparent 77.9% 100%),
-    linear-gradient(0deg, transparent 0 78%, #4b2871b8 78.2% 78.7%, transparent 78.9% 100%),
-    /* IC周辺へ伸びる細い配線 */
-    repeating-linear-gradient(32deg, transparent 0 27px, #f5dfff65 28px 29px, transparent 30px 48px),
-    repeating-linear-gradient(148deg, transparent 0 39px, #32134f70 40px 41px, transparent 42px 66px),
-    /* はんだパッド */
-    radial-gradient(circle at 9.5% 18.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
-    radial-gradient(circle at 77.5% 18.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
-    radial-gradient(circle at 77.5% 78.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
-    radial-gradient(circle at 9.5% 78.5%, #ffeaff 0 2px, #572c7d 2.5px 4px, transparent 4.5px),
-    /* 基板の濃淡 */
-    radial-gradient(ellipse at 78% 26%, #371b5a88 0 17%, transparent 18%),
-    radial-gradient(ellipse at 18% 74%, #32165077 0 15%, transparent 16%);
-  background-size: 100% 100%;
-  mix-blend-mode: screen;
-  pointer-events: none;
-}
-
-/* 4隅の固定ネジ、ICチップ、透明樹脂のハイライト */
-body[data-wallpaper="clear-purple"] .player-layout::after {
-  content: "";
-  position: absolute;
-  z-index: 0;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background:
-    /* ネジ頭 */
-    radial-gradient(circle at 18px 18px, #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
-    radial-gradient(circle at calc(100% - 18px) 18px, #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
-    radial-gradient(circle at 18px calc(100% - 18px), #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
-    radial-gradient(circle at calc(100% - 18px) calc(100% - 18px), #fff 0 2px, #d9c5e9 2.5px 5px, #563873 5.5px 7px, transparent 7.5px),
-    /* 小型ICチップと端子 */
-    linear-gradient(#28143b 0 0) 82% 38% / 34px 25px no-repeat,
-    repeating-linear-gradient(90deg, #f6dfff 0 2px, transparent 2px 5px) 82% 35% / 38px 3px no-repeat,
-    repeating-linear-gradient(90deg, #f6dfff 0 2px, transparent 2px 5px) 82% 63% / 38px 3px no-repeat,
-    /* 樹脂表面の反射 */
-    linear-gradient(112deg, #ffffff55 0%, transparent 18% 72%, #ffffff20 100%);
-  background-repeat: no-repeat;
-  box-shadow: inset 0 0 0 1px #f5ddff75;
-}
-body[data-wallpaper="clear-purple"] .button-y { background: linear-gradient(145deg, #e8c5ff, #9765c0); color: #29163b; }
-body[data-wallpaper="clear-purple"] .button-x { background: linear-gradient(145deg, #b8a4ed, #6851a0); }
-body[data-wallpaper="clear-purple"] .button-b { background: linear-gradient(145deg, #ef9acb, #a94f91); }
-body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145deg, #a5d9c5, #4d9b82); }
+/* ボタンはどの本体カラーでも黒にそろえるため、以前の色付きABXYは使わない */
+/* body[data-wallpaper="red"] .button-y { background: linear-gradient(145deg, #f4d16a, #bd8b2f); } */
+/* body[data-wallpaper="red"] .button-x { background: linear-gradient(145deg, #8bc1ef, #3c70a8); } */
+/* body[data-wallpaper="red"] .button-b { background: linear-gradient(145deg, #f2a0a0, #b8424d); } */
+/* body[data-wallpaper="red"] .button-a { background: linear-gradient(145deg, #9bd69c, #448d52); } */
 
 /* =========================================================
    LANDSCAPE: GAME BOY ADVANCE INSPIRED
@@ -636,22 +802,35 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
 @media (orientation: landscape) {
   .player-layout {
     /* 左右の操作エリアを初期版に近い幅へ戻し、中央のゲーム画面を拡大 */
-    grid-template-columns: minmax(100px, 19vw) minmax(0, 1fr) minmax(100px, 19vw);
-    /* 1段目は十字キー・ABXYを同じ高さに揃え、2段目をSTART/STOP専用にする */
-    grid-template-rows: minmax(0, 1fr) auto;
+    /* 左右の列は、はみ出して並ぶABXY（キー枠の約1.45倍）が収まる幅を最低限確保する */
+    grid-template-columns: minmax(calc(var(--controls-size-landscape) * 1.45), 19vw) minmax(0, 1fr) minmax(calc(var(--controls-size-landscape) * 1.45), 19vw);
+    /* 1段だけにして、段の高さをゲーム画面の高さに合わせる。
+       その段を本体の上下中央に置くことで、画面・十字キー・ABXYが縦方向の中央に並ぶ */
+    grid-template-rows: minmax(0, max-content);
+    align-content: center;
     max-width: 1500px;
     margin: auto;
     width: 100%;
     padding: 12px clamp(14px, 2.6vw, 38px);
   }
-  .dpad { grid-column: 1; grid-row: 1; width: min(100%, var(--controls-size-landscape)); }
+  .dpad { grid-column: 1; grid-row: 1; width: min(100%, calc(var(--controls-size-landscape) * var(--dpad-scale-landscape))); }
   .game-area { grid-column: 2; grid-row: 1; }
   .project {
-    /* 横画面は中央カラムの幅いっぱいまでゲーム画面を使う */
-    width: 100%;
-    max-height: calc(100dvh - 28px);
-    border: 7px solid var(--screen-frame);
+    --screen-bezel: var(--screen-bezel-size);
+    /* 枠の上下だけ太くする（:root の --screen-bezel-y-scale-landscape。縦画面と同じ値） */
+    --screen-bezel-y: calc(var(--screen-bezel) * var(--screen-bezel-y-scale-landscape));
+    /* 枠の太さを足しても中のゲーム画面が 4:3 のまま縮まないよう、大きさは枠の内側で決める */
+    box-sizing: content-box;
+    /* 横画面は中央カラムの幅いっぱいまでゲーム画面を使う（枠の左右の太さを引いた幅） */
+    /* 高さの上限（枠の上下の太さを引いた値）を超えないよう、幅も 4:3 で抑える。
+       56px は本体の上下の余白の分（小さくすると画面が大きくなり、本体の上下の縁に近づきます） */
+    width: min(calc(100% - 2 * var(--screen-bezel)), calc((100dvh - 56px - var(--screen-bezel-top) - var(--screen-bezel-bottom)) * 4 / 3));
+    max-height: calc(100dvh - 56px - var(--screen-bezel-top) - var(--screen-bezel-bottom));
+    border: var(--screen-bezel) solid transparent;
+    border-top-width: var(--screen-bezel-top);
+    border-bottom-width: var(--screen-bezel-bottom);
     border-radius: 12px;
+    background: var(--screen-bezel-layers);
     /* box-shadow: 0 0 0 2px var(--screen-edge), 0 10px 24px #0008; */
   }
   /* 十字キーとABXYを別々のグリッド要素として同じ行・中央位置に配置 */
@@ -662,24 +841,35 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
     justify-self: center;
     align-self: center;
   }
-  /* START/STOPはABXYとは独立した2段目。上下位置はCSS変数で調整 */
+  /* START/STOPはABXYの列で、下端をゲーム画面の下端に揃える（段の下端＝画面の下端）。
+     上下の微調整は :root の --system-buttons-offset-y */
   .system-buttons {
     grid-column: 3;
-    grid-row: 2;
+    grid-row: 1;
     justify-self: center;
-    align-self: start;
+    align-self: end;
     width: auto;
     gap: 8px;
   }
-  .system-button { min-width: 68px; min-height: 28px; }
+  /* START/STOPの大きさは縦画面と同じ（縦画面の .system-button と同じ値） */
+  .system-button {
+    min-width: calc(82px * var(--button-scale));
+    min-height: calc(31px * var(--button-scale));
+    padding: calc(6px * var(--button-scale)) calc(13px * var(--button-scale));
+    font-size: calc(10px * var(--button-scale));
+  }
+  /* 横画面のスピーカー：十字キー列の下（左余白＋左カラム幅の半分 − 穴の幅の半分） */
+  .player-layout { --speaker-left: calc(clamp(14px, 2.6vw, 38px) + 9.5vw - 30px); --speaker-bottom: 16px; }
   .player-layout {
     background-color: var(--shell-mid);
-    background-image: var(--player-skin-image, var(--preset-skin-image, linear-gradient(155deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
+    background-image: var(--shell-sheen), var(--player-skin-image, var(--preset-skin-image, linear-gradient(155deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
     background-size: cover;
     background-position: center;
     border: 1px solid #ffffff22;
-    border-radius: var(--shell-radius);
-    box-shadow: var(--shell-shadow);
+    /* 外側の角は縦画面と共通（:root の --shell-corners） */
+    border-radius: var(--shell-corners);
+    /* 外側の落ち影＋本体の厚み（:root の --shell-depth。縦画面と共通） */
+    box-shadow: 0 18px 48px #0008, var(--shell-depth);
     margin: 12px auto;
     height: calc(100% - 24px);
     max-height: 900px;
@@ -691,83 +881,151 @@ body[data-wallpaper="clear-purple"] .button-a { background: linear-gradient(145d
    上に画面、下に左右のキーと、そのさらに下にSTART/STOP
    ========================================================= */
 @media (orientation: portrait) {
+  /* 上下の黒帯。上の黒帯には設定ボタンが入るので、最低でもその分の高さを取る。
+     下も同じ高さにして、本体が上下の中央に来るようにする */
+  body {
+    --letterbox-min: max(52px, calc(env(safe-area-inset-top) + 48px));
+    padding-top: var(--letterbox-min);
+    padding-bottom: var(--letterbox-min);
+    background-color: var(--letterbox-color);
+  }
+  /* 設定ボタンを小さくして、上の黒帯の中に収める（:root の --menu-toggle-size-portrait / --menu-toggle-gap-portrait） */
+  .top-buttons {
+    top: calc(env(safe-area-inset-top) + var(--menu-toggle-gap-portrait));
+    gap: 6px;
+  }
+  .menu-toggle {
+    width: var(--menu-toggle-size-portrait);
+    height: var(--menu-toggle-size-portrait);
+    border-radius: 9px;
+  }
+  .menu-toggle svg {
+    width: calc(var(--menu-toggle-size-portrait) * 0.55);
+    height: calc(var(--menu-toggle-size-portrait) * 0.55);
+  }
   .player-layout {
     width: min(100%, 560px);
-    height: 100%;
+    /* 高さは下の height（黒帯の計算）で決める */
     margin: auto;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto auto;
+    /* 1段目：画面の上の余白 / 2段目：ゲーム画面 / 3段目：余白 / 4段目：十字キー・ABXY / 5段目：START/STOP / 6段目：余白
+       余った高さを「画面の上：画面とボタンの間：ボタンの下 ＝ 0.5 : 1 : 1」で分ける。
+       ・3段目と6段目が同じ量なので、ボタン一式は「画面の下の端」と「本体の底辺」の中間に来る
+       ・画面の上の余白は :root の --screen-top-space-portrait で調整（0 で一番上、大きいほど画面が下がる）
+       ・ボタン一式を下寄りにしたいときは6段目を小さく（例：0.6fr）、上寄りにしたいときは3段目を小さくします */
+    grid-template-rows: minmax(0, var(--screen-top-space-portrait)) auto minmax(0, 1fr) auto auto minmax(0, 1fr);
     column-gap: clamp(8px, 3vw, 20px);
     row-gap: 0;
-    padding: max(52px, calc(env(safe-area-inset-top) + 48px)) 18px max(16px, env(safe-area-inset-bottom));
+    /* 本体の高さは「横幅 × --portrait-max-aspect」まで。余った分は上下の黒帯になる（本体は上下中央） */
+    /* 下の弧の分（--shell-bottom-curve-portrait）だけ本体を下へ伸ばし、弧を下の黒帯の中へ下げる。
+       中身（画面・ボタン）の位置や広さは変わらない */
+    /* さらに、上の黒帯を --letterbox-top-keep-portrait の割合まで細くし、その分だけ本体を上へ伸ばす。
+       --band-top-portrait：もとの上の黒帯の高さ / --shell-extend-top-portrait：上へ伸ばす量 */
+    --band-top-portrait: max(var(--letterbox-min), calc((100dvh - min(100vw, 560px) * var(--portrait-max-aspect)) / 2));
+    /* ただし上の黒帯は、設定ボタンが収まる高さ（--letterbox-top-keep-min-portrait）より細くしない */
+    --letterbox-top-keep-min-portrait: calc(env(safe-area-inset-top) + var(--menu-toggle-size-portrait) + 2 * var(--menu-toggle-gap-portrait));
+    --shell-extend-top-portrait: max(0px, min(calc(var(--band-top-portrait) * (1 - var(--letterbox-top-keep-portrait))), calc(var(--band-top-portrait) - var(--letterbox-top-keep-min-portrait))));
+    height: calc(min(calc(100% + var(--shell-bottom-curve-portrait)), calc(min(100vw, 560px) * var(--portrait-max-aspect) + var(--shell-bottom-curve-portrait))) + var(--shell-extend-top-portrait));
+    /* 伸ばした分は上下の余白をマイナスにして打ち消す（上下中央の位置は伸ばす前と同じ。
+       上の端は上の黒帯へ、下の弧は下の黒帯へはみ出す） */
+    margin: calc(-1 * var(--shell-extend-top-portrait)) auto calc(-1 * var(--shell-bottom-curve-portrait));
+    align-self: center;
+    /* 設定ボタンは上の黒帯に置くので、本体の上の余白は小さくてよい。下は弧の分と、上へ伸ばした分を足す（中身は伸ばした分だけ上へ動く） */
+    padding: 18px var(--shell-side-padding-portrait) calc(var(--shell-bottom-padding-portrait) + var(--shell-bottom-curve-portrait) + var(--shell-extend-top-portrait));
     background-color: var(--shell-mid);
-    background-image: var(--player-skin-image, var(--preset-skin-image, linear-gradient(145deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
+    background-image: var(--shell-sheen), var(--player-skin-image, var(--preset-skin-image, linear-gradient(145deg, var(--shell-top), var(--shell-mid) 58%, var(--shell-bottom))));
     background-size: cover;
     background-position: center;
     border: 1px solid #ffffff20;
-    border-radius: 0;
+    /* 外側の形：上の角は小さく、下の辺はゆるい弧（:root の --shell-corners-portrait） */
+    border-radius: var(--shell-corners-portrait);
     /* box-shadow: inset 0 0 35px #0005; */
+    /* 本体の厚み（:root の --shell-depth。横画面と共通） */
+    box-shadow: var(--shell-depth);
   }
   .game-area {
     grid-column: 1 / -1;
-    grid-row: 1;
+    grid-row: 2;
     width: 100%;
     min-height: 0;
     padding: 8px 0 12px;
   }
   .project {
-    /* 縦画面の操作部に必要な高さを見直し、ゲーム画面を大きく確保 */
-    width: min(100%, calc((100dvh - 240px) * 1.333));
-    max-height: 100%;
-    border: 5vw solid var(--screen-frame);
+    --screen-bezel: var(--screen-bezel-size);
+    /* 枠の上下だけ太くする（:root の --screen-bezel-y-scale-portrait） */
+    --screen-bezel-y: calc(var(--screen-bezel) * var(--screen-bezel-y-scale-portrait));
+    /* 枠の太さを足しても中のゲーム画面が 4:3 のまま縮まないよう、大きさは枠の内側で決める */
+    box-sizing: content-box;
+    /* 縦画面の操作部に必要な高さを見直し、ゲーム画面を大きく確保（枠の左右の太さを引いた幅） */
+    width: calc(min(100%, calc((100dvh - 240px) * 1.333)) - 2 * var(--screen-bezel));
+    max-height: none;
+    border: var(--screen-bezel) solid transparent;
+    border-top-width: var(--screen-bezel-top);
+    border-bottom-width: var(--screen-bezel-bottom);
     border-radius: 13px;
+    /* 枠の描き方は横画面と共通（SCREEN BEZEL） */
+    background: var(--screen-bezel-layers);
     /* box-shadow: 0 0 0 2px var(--screen-edge), 0 8px 18px #0007; */
   }
   .dpad {
     grid-column: 1;
-    grid-row: 2;
-    width: var(--controls-size-portrait);
-    margin: 4px auto 8px;
+    grid-row: 4;
+    /* 大きさは横画面と同じ（ABXYのキー枠 × :root の --dpad-scale） */
+    width: min(100%, calc(var(--controls-size-portrait) * var(--dpad-scale-portrait)));
+    /* 下の余白で十字キーを持ち上げる（:root の --controls-raise-portrait） */
+    /* 左端をゲーム画面の黒枠の左端にそろえる（:root の --controls-inset-portrait で内側へ寄せられる） */
+    justify-self: start;
+    margin: 4px 0 calc(8px + var(--controls-raise-portrait)) var(--controls-inset-portrait);
   }
-  /* 十字キーとABXYは別要素。同じ行で各カラムの中央に配置 */
+  /* 十字キーとABXYは別要素。同じ行に置き、外側の端をゲーム画面の黒枠の左右の端にそろえる */
   .action-buttons {
     grid-column: 2;
-    grid-row: 2;
+    grid-row: 4;
     width: var(--controls-size-portrait);
-    justify-self: center;
+    justify-self: end;
     align-self: center;
-    margin: 4px auto 8px;
+    /* Aボタンはキー枠の右へ約22%はみ出すので、その分だけ内側に置くと、Aの右端が黒枠の右端にそろう */
+    margin: 4px calc(var(--controls-size-portrait) * 0.22 + var(--controls-inset-portrait)) calc(8px + var(--controls-raise-portrait)) 0;
   }
-  /* START/STOPは独立した要素としてABXYの下段へ。横位置はABXYの中心 */
+  /* START/STOPは本体の左右中央・ボタン一式の一番下（4段目）へ */
   .system-buttons {
-    grid-column: 2;
-    grid-row: 3;
+    grid-column: 1 / -1;
+    grid-row: 5;
     justify-self: center;
     align-self: start;
     width: auto;
-    padding-top: 5px;
+    /* Bボタンのはみ出し分だけ下げて重なりを防ぐ（:rootの --system-buttons-clearance-portrait で調整） */
+    padding-top: calc(var(--system-buttons-clearance-portrait) + var(--system-buttons-extra-gap-portrait));
     gap: 12px;
   }
+  /* 大きさは :root の --button-scale に合わせて縮む（横画面と同じ値） */
   .system-button {
-    min-width: 82px;
-    min-height: 31px;
-    font-size: 10px;
+    min-width: calc(82px * var(--button-scale));
+    min-height: calc(31px * var(--button-scale));
+    padding: calc(6px * var(--button-scale)) calc(13px * var(--button-scale));
+    font-size: calc(10px * var(--button-scale));
   }
-  body[data-wallpaper="classic"] .control { color: #e4e7e9; }
+  /* ABXYの文字色は本体カラーごとの --abxy-text（クラシックグレーは赤紫のボタンに合う薄いピンク） */
+  body[data-wallpaper="classic"] .action-buttons .control { color: var(--abxy-text); }
+  /* 縦画面のスピーカー：左下の角。START/STOPが中央下にあるので重ならない位置に置く。
+     下の辺が弧を描いているので、角で欠けないよう少し上・内側に置く */
+  .player-layout { --speaker-left: 30px; --speaker-bottom: calc(18px + var(--shell-bottom-curve-portrait)); }
 }
 
 /* 画面の高さが小さい端末で、操作部が押し出されないように縮める */
 @media (max-height: 520px) and (orientation: landscape) {
   .player-layout { padding-top: 5px; padding-bottom: 5px; margin-top: 5px; margin-bottom: 5px; height: calc(100% - 10px); }
-  :root { --controls-size-landscape: min(22vh, 145px); }
-  .system-button { min-width: 60px; min-height: 25px; }
+  /* 操作キー・START/STOPの大きさは縦画面とそろえるため、ここでは縮めない（:root の --controls-size が画面の短い辺に合わせて小さくなる） */
   .menu-toggle { width: 36px; height: 36px; }
 }
 @media (max-height: 700px) and (orientation: portrait) {
-  .player-layout { padding-top: max(48px, calc(env(safe-area-inset-top) + 44px)); padding-bottom: max(10px, env(safe-area-inset-bottom)); }
-  .project { width: min(100%, calc((100dvh - 220px) * 1.333)); }
-  :root { --controls-size-portrait: min(30vw, 145px); }
+  /* 本体の上下の余白を詰める（上下の黒帯は設定ボタンが入る分だけ必要なので細くしない） */
+  .player-layout { padding-top: 12px; padding-bottom: calc(var(--shell-bottom-padding-portrait) - 6px + var(--shell-bottom-curve-portrait) + var(--shell-extend-top-portrait)); }
+  /* スピーカーが十字キーに近づきすぎないよう、少し下げる */
+  .player-layout { --speaker-bottom: var(--shell-bottom-curve-portrait); }
+  .project { width: calc(min(100%, calc((100dvh - 220px) * 1.333)) - 2 * var(--screen-bezel)); }
+  /* 操作キーの大きさは横画面とそろえるため、ここでは変えない（:root の --controls-size） */
 }
 
 
