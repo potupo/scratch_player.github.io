@@ -19,6 +19,7 @@
   const ratingSection = document.getElementById('rating-section');
   const scratchProjectLink = document.getElementById('scratch-project-link');
   const projectInfoSection = document.getElementById('project-info-section');
+  const projectCreditsSection = document.getElementById('project-credits-section');
   const projectInfoStatus = document.getElementById('project-info-status');
   const projectInstructions = document.getElementById('project-instructions');
   const projectCredits = document.getElementById('project-credits');
@@ -182,6 +183,7 @@
     if (expectedLoadSequence !== loadSequence || loadedProjectId !== projectId) return;
 
     projectInfoSection.hidden = false;
+    if (projectCreditsSection) projectCreditsSection.hidden = false;
     const instructions = typeof projectInfo.instructions === 'string' ? projectInfo.instructions.trim() : '';
     const credits = typeof projectInfo.description === 'string' ? projectInfo.description.trim() : '';
 
@@ -289,6 +291,8 @@
       // api.scratch.mit.eduへのブラウザー直アクセスはCORSで拒否されるため、追加fetchしない。
       displayProjectInfo(project.metadata, projectId, thisLoad);
       placeholder.hidden = true;
+      applyKeyMapForProject(`project:${projectId}`);
+      showUnsupportedKeyWarning();
       setStatus(`読み込み完了：${projectId}`, false);
 
       // 読み込み・VMへのロード・開始がすべて成功した場合だけ設定画面を閉じる。
@@ -306,6 +310,243 @@
       if (thisLoad === loadSequence) loadButton.disabled = false;
     }
   }
+
+  // ===== キー割り当て（作品ごとに保存） =====
+  // 画面のボタン（十字キー・A・B・X・Y）を押した時に、ゲームへ送るキーを作品ごとに変えられるようにする。
+  // 割り当ては localStorage に「sgp-keymap:作品の識別子」で保存する（Scratchの作品は project:ID、SB3は sb3:ファイル名）。
+  // キーの名前は Scratch の呼び方（'up arrow'、'space'、'a' など）で持つ。
+  const CONTROL_BUTTONS = [
+    { id: 'ArrowUp', label: '↑', defaultKey: 'up arrow' },
+    { id: 'ArrowDown', label: '↓', defaultKey: 'down arrow' },
+    { id: 'ArrowLeft', label: '←', defaultKey: 'left arrow' },
+    { id: 'ArrowRight', label: '→', defaultKey: 'right arrow' },
+    { id: 'a', label: 'A', defaultKey: 'a' },
+    { id: 'b', label: 'B', defaultKey: 'b' },
+    { id: 'x', label: 'X', defaultKey: 'x' },
+    { id: 'y', label: 'Y', defaultKey: 'y' }
+  ];
+  // 選択欄に並べるキー（Scratchの「○○キーが押されたとき」で選べるキー）
+  const ASSIGNABLE_KEYS = [
+    'up arrow', 'down arrow', 'left arrow', 'right arrow', 'space', 'enter',
+    ...'abcdefghijklmnopqrstuvwxyz'.split(''),
+    ...'0123456789'.split('')
+  ];
+  const KEYMAP_STORAGE_PREFIX = 'sgp-keymap:';
+  const keymapGrid = document.getElementById('keymap-grid');
+  const keymapResetButton = document.getElementById('keymap-reset');
+  let currentKeyMapId = null;
+  let keyMap = defaultKeyMap();
+  let usedProjectKeys = [];
+
+  function defaultKeyMap() {
+    return Object.fromEntries(CONTROL_BUTTONS.map(button => [button.id, button.defaultKey]));
+  }
+
+  // ---- QRコード（アドレス）でキー割り当てを渡す ----
+  // 初期と違うボタンだけを「ボタン:キー」のカンマ区切りで ?keys= に入れる（例：keys=up:w,left:a,x:z）
+  // 矢印は短く up/down/left/right と書く
+  const URL_BUTTON_NAMES = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', a: 'a', b: 'b', x: 'x', y: 'y' };
+  const URL_KEY_NAMES = { 'up arrow': 'up', 'down arrow': 'down', 'left arrow': 'left', 'right arrow': 'right' };
+
+  function keyMapToUrlValue(map) {
+    return CONTROL_BUTTONS
+      .filter(button => map[button.id] !== button.defaultKey)
+      .map(button => `${URL_BUTTON_NAMES[button.id]}:${URL_KEY_NAMES[map[button.id]] || map[button.id]}`)
+      .join(',');
+  }
+
+  function keyMapFromUrlValue(value) {
+    if (!value) return null;
+    const map = defaultKeyMap();
+    let changed = false;
+    for (const pair of value.split(',')) {
+      const [buttonName, keyName] = pair.split(':').map(part => (part || '').trim().toLowerCase());
+      const buttonId = Object.keys(URL_BUTTON_NAMES).find(id => URL_BUTTON_NAMES[id] === buttonName);
+      const key = Object.keys(URL_KEY_NAMES).find(name => URL_KEY_NAMES[name] === keyName) || keyName;
+      if (!buttonId || !ASSIGNABLE_KEYS.includes(key)) continue;
+      map[buttonId] = key;
+      changed = true;
+    }
+    return changed ? map : null;
+  }
+
+  // QRコードから開かれた時の割り当て。最初にその作品を読み込んだ時に一度だけ使い、この端末にも保存する
+  const startupUrlParams = new URLSearchParams(window.location.search);
+  let pendingUrlKeyMap = startupUrlParams.get('project')
+    ? { id: `project:${startupUrlParams.get('project')}`, map: keyMapFromUrlValue(startupUrlParams.get('keys')) }
+    : null;
+
+  function scratchKeyLabel(key) {
+    const labels = { space: 'スペース', enter: 'Enter', 'up arrow': '↑', 'down arrow': '↓', 'left arrow': '←', 'right arrow': '→' };
+    return labels[key] || key.toUpperCase();
+  }
+
+  // Scratchのキー名を、ゲームへ送る時のキー名（ブラウザーのキー名）に直す
+  function scratchKeyToEventKey(key) {
+    const keys = { space: ' ', enter: 'Enter', 'up arrow': 'ArrowUp', 'down arrow': 'ArrowDown', 'left arrow': 'ArrowLeft', 'right arrow': 'ArrowRight' };
+    return keys[key] || key;
+  }
+
+  function loadKeyMap(id) {
+    const map = defaultKeyMap();
+    if (!id) return map;
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEYMAP_STORAGE_PREFIX + id) || 'null');
+      if (saved && typeof saved === 'object') {
+        for (const button of CONTROL_BUTTONS) {
+          if (ASSIGNABLE_KEYS.includes(saved[button.id])) map[button.id] = saved[button.id];
+        }
+      }
+    } catch (error) {
+      console.warn('Key map could not be loaded:', error);
+    }
+    return map;
+  }
+
+  function saveKeyMap() {
+    if (!currentKeyMapId) return;
+    try {
+      const isDefault = CONTROL_BUTTONS.every(button => keyMap[button.id] === button.defaultKey);
+      if (isDefault) localStorage.removeItem(KEYMAP_STORAGE_PREFIX + currentKeyMapId);
+      else localStorage.setItem(KEYMAP_STORAGE_PREFIX + currentKeyMapId, JSON.stringify(keyMap));
+    } catch (error) {
+      console.warn('Key map could not be saved:', error);
+    }
+  }
+
+  function renderKeyMapControls() {
+    if (!keymapGrid) return;
+    keymapGrid.replaceChildren();
+    for (const button of CONTROL_BUTTONS) {
+      const row = document.createElement('label');
+      row.className = 'keymap-row';
+      const name = document.createElement('span');
+      name.textContent = button.label;
+      const select = document.createElement('select');
+      select.dataset.button = button.id;
+      select.setAttribute('aria-label', `${button.label}ボタンに割り当てるキー`);
+      for (const key of ASSIGNABLE_KEYS) {
+        const option = document.createElement('option');
+        option.value = key;
+        option.textContent = scratchKeyLabel(key);
+        select.append(option);
+      }
+      select.value = keyMap[button.id];
+      select.addEventListener('change', () => {
+        releaseAllKeys();
+        keyMap[button.id] = select.value;
+        saveKeyMap();
+        clearQrForKeyMapChange();
+      });
+      row.append(name, select);
+      keymapGrid.append(row);
+    }
+  }
+
+  // 作品を読み込んだ時に呼ぶ：その作品の割り当てを読み出し、設定欄を作り直す
+  function applyKeyMapForProject(id) {
+    releaseAllKeys();
+    currentKeyMapId = id;
+    keyMap = loadKeyMap(id);
+    if (pendingUrlKeyMap && pendingUrlKeyMap.id === id) {
+      if (pendingUrlKeyMap.map) {
+        keyMap = pendingUrlKeyMap.map;
+        saveKeyMap();
+      }
+      pendingUrlKeyMap = null;
+    }
+    usedProjectKeys = findUsedKeys();
+    renderKeyMapControls();
+  }
+
+  keymapResetButton?.addEventListener('click', () => {
+    releaseAllKeys();
+    keyMap = defaultKeyMap();
+    saveKeyMap();
+    renderKeyMapControls();
+    clearQrForKeyMapChange();
+  });
+
+  // QRコードには作った時点の割り当てが入っているので、割り当てを変えたら古いQRコードを消して作り直しを促す
+  function clearQrForKeyMapChange() {
+    if (!qrOutput.childElementCount) return;
+    qrOutput.replaceChildren();
+    generatedQrCanvas = null;
+    downloadQrButton.hidden = true;
+    showQrMessage('キー割り当てを変更したので、QRコードを作り直してください。');
+  }
+
+  // ===== 対応していないキーの警告 =====
+  // 読み込んだ作品のブロックから「○○キーが押されたとき」「○○キーが押された？」のキーを集め、
+  // 画面のボタンに割り当てられていないキーがあれば、ゲーム画面の上に数秒だけ警告を出す。
+  // キーを変数などで決めているブロックは、遊ぶまでキーがわからないので対象外。「どれかのキー」も対象外。
+  const KEY_WARNING_DURATION_MS = 6000; // 警告を表示しておく時間（ミリ秒）
+  const keyWarningElement = document.getElementById('key-warning');
+  let keyWarningTimer = null;
+
+  // 作品が使っているキーを、すべて集める（「どれかのキー」は除く）
+  function findUsedKeys() {
+    const runtime = scaffolding?.vm?.runtime;
+    if (!runtime) return [];
+    const found = new Set();
+    for (const target of runtime.targets) {
+      if (!target.isOriginal) continue;
+      const blocks = target.blocks?._blocks || {};
+      for (const block of Object.values(blocks)) {
+        let key = null;
+        if (block.opcode === 'event_whenkeypressed') {
+          key = block.fields?.KEY_OPTION?.value;
+        } else if (block.opcode === 'sensing_keypressed') {
+          const input = block.inputs?.KEY_OPTION;
+          // 入力欄にほかのブロック（変数など）が入っている時は、キーが決まらないので調べない
+          if (!input || input.block !== input.shadow) continue;
+          key = blocks[input.block]?.fields?.KEY_OPTION?.value;
+        }
+        if (typeof key !== 'string' || !key) continue;
+        key = key.toLowerCase();
+        if (key !== 'any') found.add(key);
+      }
+    }
+    return [...found];
+  }
+
+  // 使っているのに、どのボタンにも割り当てられていないキー
+  function findUnsupportedKeys() {
+    const assigned = new Set(Object.values(keyMap));
+    return usedProjectKeys.filter(key => !assigned.has(key));
+  }
+
+  function hideKeyWarning() {
+    if (!keyWarningElement) return;
+    keyWarningElement.hidden = true;
+    clearTimeout(keyWarningTimer);
+  }
+
+  // 警告は2種類。当てはまるものをすべて、1行ずつ表示する
+  // ・割り当てられていないキーがある → 設定の「キー割り当て」で変更するよう促す
+  // ・使っているキーの数がボタンの数（8個）より多い → すべてのキーは操作できないことを伝える
+  function showUnsupportedKeyWarning() {
+    if (!keyWarningElement) return;
+    hideKeyWarning();
+    const messages = [];
+    const unassigned = findUnsupportedKeys();
+    if (unassigned.length) {
+      const names = unassigned.map(key => `「${scratchKeyLabel(key)}」`).join('');
+      messages.push(`⚠ ${names}キーがボタンに割り当てられていません。操作方法（コントローラーのアイコン）の「キー割り当て」から変更してください。`);
+    }
+    if (usedProjectKeys.length > CONTROL_BUTTONS.length) {
+      messages.push(`⚠ この作品は${usedProjectKeys.length}個のキーを使っていますが、ボタンは${CONTROL_BUTTONS.length}個です。すべてのキーは操作できません。`);
+    }
+    if (!messages.length) return;
+    keyWarningElement.replaceChildren(...messages.map(message => {
+      const line = document.createElement('p');
+      line.textContent = message;
+      return line;
+    }));
+    keyWarningElement.hidden = false;
+    keyWarningTimer = setTimeout(hideKeyWarning, KEY_WARNING_DURATION_MS);
+  }
+  keyWarningElement?.addEventListener('click', hideKeyWarning);
 
   function safeJson(value) {
     return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
@@ -625,8 +866,11 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
       hasLoadedProject = true;
       ratingSection.hidden = true;
       projectInfoSection.hidden = true;
+      if (projectCreditsSection) projectCreditsSection.hidden = true;
       scratchProjectLink.removeAttribute('href');
       placeholder.hidden = true;
+      applyKeyMapForProject(`sb3:${selectedSb3File.name}`);
+      showUnsupportedKeyWarning();
       setStatus(`SB3プレビュー準備完了：${selectedSb3File.name}`, false);
       closeSettings();
     } catch (error) {
@@ -706,7 +950,11 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
       const playerUrl = new URL(window.location.href);
       playerUrl.hash = '';
       playerUrl.searchParams.set('project', loadedProjectId);
-      const qrUrl = playerUrl.href;
+      // キー割り当てを初期から変えている時だけ、アドレスに入れる
+      // （「:」「,」を %3A などに変換すると長くなるので、変換せずに付け足す。値は英数字と「:」「,」だけ）
+      playerUrl.searchParams.delete('keys');
+      const keysValue = keyMapToUrlValue(keyMap);
+      const qrUrl = playerUrl.href + (keysValue ? `&keys=${keysValue}` : '');
 
       new QRCodeLibrary(qrOutput, {
         text: qrUrl,
@@ -750,10 +998,23 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     return scaffolding?.vm?.runtime?.ioDevices?.keyboard || null;
   }
 
+  // key は画面のボタンの名前（'ArrowUp'、'a' など）。キー割り当てに従って、実際にゲームへ送るキーに置き換える。
+  // 2つのボタンに同じキーを割り当てた時、片方を離しただけでキーが離されないよう、押している数を数える
+  const outputKeyCounts = new Map();
   function sendKey(key, isDown) {
     const device = keyboardDevice();
     if (!device) return;
-    device.postData({ key, isDown });
+    const outputKey = scratchKeyToEventKey(keyMap[key] || key);
+    const count = outputKeyCounts.get(outputKey) || 0;
+    if (isDown) {
+      outputKeyCounts.set(outputKey, count + 1);
+      if (count === 0) device.postData({ key: outputKey, isDown: true });
+    } else {
+      if (count <= 1) {
+        outputKeyCounts.delete(outputKey);
+        device.postData({ key: outputKey, isDown: false });
+      } else outputKeyCounts.set(outputKey, count - 1);
+    }
   }
 
 
@@ -934,6 +1195,10 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     actionKeyReleaseTimers.clear();
     actionKeyDownTimes.clear();
     for (const key of heldKeys) sendKey(key, false);
+    // 念のため、まだ押されたままのキーもすべて離す
+    const device = keyboardDevice();
+    for (const outputKey of outputKeyCounts.keys()) device?.postData({ key: outputKey, isDown: false });
+    outputKeyCounts.clear();
     heldKeys.clear();
     dpadHeldKeys.clear();
     document.querySelectorAll('.control.pressed').forEach(button => button.classList.remove('pressed'));
@@ -1039,6 +1304,7 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   window.addEventListener('pagehide', releaseAllKeys);
 
   restoreWallpaper();
+  renderKeyMapControls();
   // QRコード経由で開かれた場合はURLのprojectパラメータを優先する。
   // 数字の作品IDとして妥当な値だけを採用し、それ以外は従来の既定作品を読み込む。
   const startupParams = new URLSearchParams(window.location.search);

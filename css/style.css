@@ -376,6 +376,26 @@ button:disabled { opacity: .55; cursor: wait; }
   overflow-wrap: anywhere;
 }
 .setting-error[hidden] { display: none; }
+/* キー割り当て：2列に「ボタン名＋選択欄」を並べる */
+.keymap-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
+}
+.keymap-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.keymap-row span {
+  flex: none;
+  width: 18px;
+  color: #dce2ed;
+  font-weight: 700;
+  text-align: center;
+}
+.settings-section .keymap-row select { flex: 1; min-width: 0; width: auto; }
 .custom-wallpaper-row { display: flex; gap: 7px; }
 .custom-wallpaper-row input { flex: 1; }
 .custom-wallpaper-row button { flex: none; }
@@ -454,6 +474,33 @@ button:disabled { opacity: .55; cursor: wait; }
   box-shadow: 0 1px 0 #ffffff40, 0 -1px 0 #00000026;
 }
 .project > * { max-width: 100%; max-height: 100%; }
+/* 対応していないキーの警告：ゲーム画面の上部に数秒だけ表示（タップで消える）。
+   表示時間は js/app.js の KEY_WARNING_DURATION_MS、色は --key-warning-bg / --key-warning-text で調整 */
+.key-warning {
+  --key-warning-bg: #2a2208e6;
+  --key-warning-text: #ffe08a;
+  position: absolute;
+  z-index: 20;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  padding: 8px 10px;
+  border: 1px solid #ffd54a80;
+  border-radius: 8px;
+  background: var(--key-warning-bg);
+  color: var(--key-warning-text);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  box-shadow: 0 4px 14px #0008;
+  cursor: pointer;
+  animation: key-warning-in .25s ease-out;
+}
+.key-warning[hidden] { display: none; }
+/* 警告が2つある時は1行ずつ並べる */
+.key-warning p { margin: 0; }
+.key-warning p + p { margin-top: 4px; padding-top: 4px; border-top: 1px solid #ffd54a40; }
+@keyframes key-warning-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .placeholder {
   position: absolute;
   inset: 0;

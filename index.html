@@ -43,6 +43,16 @@
           <p id="project-instructions" class="project-info-text">取得しています…</p>
         </div>
       </div>
+    </section>
+    <!-- キー割り当て：画面のボタンを押した時にゲームへ送るキーを、作品ごとに変更する（中身は js/app.js で作る） -->
+    <div class="settings-section keymap-section">
+      <label>キー割り当て</label>
+      <div id="keymap-grid" class="keymap-grid"></div>
+      <button id="keymap-reset" type="button">初期の割り当てに戻す</button>
+      <p class="setting-hint">画面のボタンを押した時に、ゲームへ送るキーを変更できます。作品ごとに、このブラウザー内に保存されます。</p>
+    </div>
+    <!-- メモとクレジット（操作方法と同じく、Scratchの作品情報を読み込んだ時だけ表示） -->
+    <section id="project-credits-section" class="settings-section project-info-section" aria-label="メモとクレジット" hidden>
       <div class="project-info-group">
         <label>メモとクレジット</label>
         <div class="project-info-block">
@@ -138,6 +148,8 @@
           <div class="loader" aria-hidden="true"></div>
           <p id="loading-status">Scratchゲームを読み込んでいます…</p>
         </div>
+        <!-- 作品が、このプレイヤーのボタンで押せないキーを使っている時に、読み込み直後だけ出す警告（タップで消える） -->
+        <div id="key-warning" class="key-warning" role="status" hidden></div>
       </div>
     </section>
 
