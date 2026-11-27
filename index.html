@@ -108,14 +108,16 @@
       <button id="fullscreen-button" class="wide-button" type="button">⛶ フルスクリーン</button>
     </div>
 
-    <!-- QRコード：読み込み中のScratch作品を、このプレイヤーで開くQRコードを作成する -->
+    <!-- 共有：読み込み中のScratch作品を、このプレイヤーで開くQRコード・リンクを作成する -->
     <div class="settings-section qr-section">
-      <label for="make-qr">QRコード</label>
+      <label for="make-qr">共有（QRコード・リンク）</label>
       <button id="make-qr" type="button">このゲームのQRコードを生成</button>
+      <!-- QRコードと同じリンクをコピーする（配布用） -->
+      <button id="copy-link" class="copy-link-button" type="button">このゲームのリンクをコピー</button>
       <div id="qr-output" class="qr-output" aria-live="polite"></div>
       <p id="qr-url-output" class="setting-hint" hidden></p>
       <button id="download-qr" type="button" hidden>QRコードを保存</button>
-      <p class="setting-hint">このプレイヤーのURLを使って、読み込み中のScratch作品を開くQRコードを作成します。</p>
+      <p class="setting-hint">このプレイヤーのURLを使って、読み込み中のScratch作品を開くQRコードやリンクを作成します。キー割り当ても一緒に入ります。</p>
     </div>
 
     <!-- 開発者向け：SB3から専用HTMLを生成する -->

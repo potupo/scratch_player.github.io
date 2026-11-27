@@ -1210,6 +1210,12 @@ body[data-wallpaper="teal"] .player-layout {
 .qr-output { display: grid; place-items: center; min-height: 0; padding: 8px; background: #ffffff; border-radius: 8px; }
 .qr-output:empty { display: none; }
 .qr-output img, .qr-output canvas { display: block; max-width: 100%; height: auto; }
+/* 「リンクをコピー」を押した直後（約2秒）の見た目。色は --copy-done-color で調整 */
+.copy-link-button { --copy-done-color: #3fb27f; }
+.copy-link-button.is-copied {
+  border-color: var(--copy-done-color);
+  color: var(--copy-done-color);
+}
 
 .sc-layers{
   width: 100% !important;

@@ -928,6 +928,22 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     qrUrlOutput.hidden = false;
   }
 
+  // 共有用のアドレス（QRコードとリンクのコピーで共通）。作れない時は理由を返す
+  function buildShareUrl() {
+    if (!loadedProjectId) return { error: 'Scratchゲームを読み込んでから共有してください。' };
+    if (!['http:', 'https:'].includes(window.location.protocol)) {
+      return { error: 'Web公開されたプレイヤー上で共有してください。' };
+    }
+    const playerUrl = new URL(window.location.href);
+    playerUrl.hash = '';
+    playerUrl.searchParams.set('project', loadedProjectId);
+    // キー割り当てを初期から変えている時だけ、アドレスに入れる
+    // （「:」「,」を %3A などに変換すると長くなるので、変換せずに付け足す。値は英数字と「:」「,」だけ）
+    playerUrl.searchParams.delete('keys');
+    const keysValue = keyMapToUrlValue(keyMap);
+    return { url: playerUrl.href + (keysValue ? `&keys=${keysValue}` : '') };
+  }
+
   document.getElementById('make-qr').addEventListener('click', async () => {
     qrOutput.replaceChildren();
     generatedQrCanvas = null;
@@ -935,26 +951,16 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     qrUrlOutput.hidden = true;
     qrUrlOutput.textContent = '';
 
-    if (!loadedProjectId) {
-      showQrMessage('Scratchゲームを読み込んでからQRコードを生成してください。');
-      return;
-    }
-    if (!['http:', 'https:'].includes(window.location.protocol)) {
-      showQrMessage('Web公開されたプレイヤー上でQRコードを生成してください。');
+    const share = buildShareUrl();
+    if (share.error) {
+      showQrMessage(share.error);
       return;
     }
 
     statusElement.textContent = 'QRコードを生成しています…';
     try {
       const QRCodeLibrary = await ensureQRCodeLibrary();
-      const playerUrl = new URL(window.location.href);
-      playerUrl.hash = '';
-      playerUrl.searchParams.set('project', loadedProjectId);
-      // キー割り当てを初期から変えている時だけ、アドレスに入れる
-      // （「:」「,」を %3A などに変換すると長くなるので、変換せずに付け足す。値は英数字と「:」「,」だけ）
-      playerUrl.searchParams.delete('keys');
-      const keysValue = keyMapToUrlValue(keyMap);
-      const qrUrl = playerUrl.href + (keysValue ? `&keys=${keysValue}` : '');
+      const qrUrl = share.url;
 
       new QRCodeLibrary(qrOutput, {
         text: qrUrl,
@@ -992,6 +998,52 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
   downloadQrButton.addEventListener('click', () => {
     if (!generatedQrCanvas) return;
     const anchor = document.createElement('a'); anchor.href = generatedQrCanvas.toDataURL('image/png'); anchor.download = 'game-qr.png'; anchor.click();
+  });
+
+  // ---- リンクのコピー：QRコードと同じアドレスをクリップボードへ ----
+  const copyLinkButton = document.getElementById('copy-link');
+  const COPY_LINK_LABEL = copyLinkButton.textContent;
+  let copyLinkTimer = 0;
+
+  // クリップボードAPIは https か localhost でしか使えないので、使えない時は昔の方法でコピーする
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      try { await navigator.clipboard.writeText(text); return true; } catch (error) { /* 下の方法を試す */ }
+    }
+    const area = document.createElement('textarea');
+    area.value = text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    area.setSelectionRange(0, text.length);
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch (error) { copied = false; }
+    area.remove();
+    return copied;
+  }
+
+  copyLinkButton.addEventListener('click', async () => {
+    const share = buildShareUrl();
+    if (share.error) {
+      showQrMessage(share.error);
+      return;
+    }
+    const copied = await copyText(share.url);
+    if (!copied) {
+      // コピーできなかった時は、アドレスを表示して手で選べるようにする
+      showQrMessage(`コピーできませんでした。次のリンクを長押ししてコピーしてください：${share.url}`);
+      return;
+    }
+    // ボタンの文字を少しの間「コピーしました」に変える
+    copyLinkButton.textContent = '✓ リンクをコピーしました';
+    copyLinkButton.classList.add('is-copied');
+    window.clearTimeout(copyLinkTimer);
+    copyLinkTimer = window.setTimeout(() => {
+      copyLinkButton.textContent = COPY_LINK_LABEL;
+      copyLinkButton.classList.remove('is-copied');
+    }, 2000);
   });
 
   function keyboardDevice() {
