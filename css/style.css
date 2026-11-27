@@ -1060,6 +1060,10 @@ body[data-wallpaper="teal"] .player-layout {
   }
   .player-layout {
     width: min(100%, 560px);
+    /* iPadなど横幅の広い縦画面でも、本体が横いっぱいに伸びないよう上限をかける。
+       （body が flex なので、width だけだと flex の伸び（flex-grow）で広がってしまう） */
+    max-width: 560px;
+    flex: 0 1 auto;
     /* 高さは下の height（黒帯の計算）で決める */
     margin: auto;
     display: grid;
