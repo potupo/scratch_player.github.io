@@ -500,6 +500,31 @@ button:disabled { opacity: .55; cursor: wait; }
 /* 警告が2つある時は1行ずつ並べる */
 .key-warning p { margin: 0; }
 .key-warning p + p { margin-top: 4px; padding-top: 4px; border-top: 1px solid #ffd54a40; }
+/* 警告文の中のコントローラーのアイコン（右上の操作方法ボタンを小さくした見た目）。
+   大きさは --key-warning-icon-size で調整 */
+.key-warning-icon {
+  --key-warning-icon-size: 1.7em;
+  display: inline-grid;
+  place-items: center;
+  width: var(--key-warning-icon-size);
+  height: var(--key-warning-icon-size);
+  margin: 0 3px;
+  vertical-align: middle;
+  border: 1px solid #ffffff24;
+  border-radius: 6px;
+  background: #171b24;
+  color: #f5f6fa;
+}
+.key-warning-icon svg {
+  width: 72%;
+  height: 72%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.key-warning-icon svg .icon-fill { fill: currentColor; stroke: none; }
 @keyframes key-warning-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 .placeholder {
   position: absolute;

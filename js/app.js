@@ -522,6 +522,17 @@
     clearTimeout(keyWarningTimer);
   }
 
+  // 警告文の中に入れる、操作方法ボタンと同じ見た目の小さなアイコン（右上のボタンのSVGを複製する）
+  function createControllerIconBadge() {
+    const badge = document.createElement('span');
+    badge.className = 'key-warning-icon';
+    badge.setAttribute('role', 'img');
+    badge.setAttribute('aria-label', 'コントローラーのアイコン');
+    const sourceIcon = document.querySelector('#info-toggle svg');
+    if (sourceIcon) badge.append(sourceIcon.cloneNode(true));
+    return badge;
+  }
+
   // 警告は2種類。当てはまるものをすべて、1行ずつ表示する
   // ・割り当てられていないキーがある → 設定の「キー割り当て」で変更するよう促す
   // ・使っているキーの数がボタンの数（8個）より多い → すべてのキーは操作できないことを伝える
@@ -532,7 +543,8 @@
     const unassigned = findUnsupportedKeys();
     if (unassigned.length) {
       const names = unassigned.map(key => `「${scratchKeyLabel(key)}」`).join('');
-      messages.push(`⚠ ${names}キーがボタンに割り当てられていません。操作方法（コントローラーのアイコン）の「キー割り当て」から変更してください。`);
+      // 「{icon}」の所には、右上の操作方法ボタンと同じコントローラーのアイコンを入れる
+      messages.push(`⚠ ${names}キーがボタンに割り当てられていません。操作方法{icon}の「キー割り当て」から変更してください。`);
     }
     if (usedProjectKeys.length > CONTROL_BUTTONS.length) {
       messages.push(`⚠ この作品は${usedProjectKeys.length}個のキーを使っていますが、ボタンは${CONTROL_BUTTONS.length}個です。すべてのキーは操作できません。`);
@@ -540,7 +552,10 @@
     if (!messages.length) return;
     keyWarningElement.replaceChildren(...messages.map(message => {
       const line = document.createElement('p');
-      line.textContent = message;
+      message.split('{icon}').forEach((part, index) => {
+        if (index > 0) line.append(createControllerIconBadge());
+        line.append(part);
+      });
       return line;
     }));
     keyWarningElement.hidden = false;
@@ -940,6 +955,8 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
     // キー割り当てを初期から変えている時だけ、アドレスに入れる
     // （「:」「,」を %3A などに変換すると長くなるので、変換せずに付け足す。値は英数字と「:」「,」だけ）
     playerUrl.searchParams.delete('keys');
+    // 開発者モードの合図（?dev=1）は配布するリンクに入れない
+    playerUrl.searchParams.delete('dev');
     const keysValue = keyMapToUrlValue(keyMap);
     return { url: playerUrl.href + (keysValue ? `&keys=${keysValue}` : '') };
   }
@@ -1357,6 +1374,24 @@ window.addEventListener('blur', releaseAll); document.addEventListener('visibili
 
   restoreWallpaper();
   renderKeyMapControls();
+  // 開発者モードは普段は隠す。表示するのは次の時だけ：
+  //  ・自分のPCのローカルサーバー（localhost / 127.0.0.1 / 192.168.〜）で開いた時
+  //  ・アドレスに ?dev=1 を付けて開いた時（その端末のブラウザーに記憶。?dev=0 で解除）
+  // ※ 画面から隠すだけで、ページのファイル自体は誰でも見られる点に注意
+  (() => {
+    const DEV_STORAGE_KEY = 'sgp-dev';
+    const devParam = new URLSearchParams(window.location.search).get('dev');
+    try {
+      if (devParam === '1') localStorage.setItem(DEV_STORAGE_KEY, '1');
+      if (devParam === '0') localStorage.removeItem(DEV_STORAGE_KEY);
+    } catch (error) { /* 保存できない環境では、その回だけの判定にする */ }
+    let remembered = false;
+    try { remembered = localStorage.getItem(DEV_STORAGE_KEY) === '1'; } catch (error) { remembered = false; }
+    const isLocalHost = /^(localhost|127\.0\.0\.1|192\.168\.\d+\.\d+)$/.test(window.location.hostname)
+      || window.location.protocol === 'file:';
+    const developerTools = document.getElementById('developer-tools');
+    if (developerTools) developerTools.hidden = !(isLocalHost || devParam === '1' || remembered);
+  })();
   // QRコード経由で開かれた場合はURLのprojectパラメータを優先する。
   // 数字の作品IDとして妥当な値だけを採用し、それ以外は従来の既定作品を読み込む。
   const startupParams = new URLSearchParams(window.location.search);
